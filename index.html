@@ -1084,13 +1084,26 @@ async function loadRecords() {
 
     let content
     if (file.content && file.content.length > 10) {
-      // 小文件：直接解析 Base64 content
-      content = JSON.parse(atob(file.content))
+      // 小文件：Base64 解码后还原 UTF-8（兼容旧编码 unescape(encodeURIComponent)）
+      const latin1Text = atob(file.content)
+      try {
+        const jsonText = decodeURIComponent(escape(latin1Text))
+        content = JSON.parse(jsonText)
+      } catch (e) {
+        // 降级：直接解析（兼容新编码 TextEncoder）
+        content = JSON.parse(latin1Text)
+      }
     } else if (file.download_url) {
-      // 大文件（>1MB）：GitHub 不返回 content，改用 download_url 下载
+      // 大文件（>1MB）：下载原始字节，按 Latin-1 解码后还原 UTF-8
       const res = await fetch(file.download_url)
-      const text = await res.text()
-      content = JSON.parse(text)
+      const bytes = new Uint8Array(await res.arrayBuffer())
+      const latin1Text = new TextDecoder('iso-8859-1').decode(bytes)
+      try {
+        const jsonText = decodeURIComponent(escape(latin1Text))
+        content = JSON.parse(jsonText)
+      } catch (e) {
+        content = JSON.parse(latin1Text)
+      }
     } else {
       throw new Error('无法获取文件内容')
     }
@@ -1117,9 +1130,13 @@ async function loadRecords() {
 // &#21021;&#22987;&#21270;&#25968;&#25454;&#25991;&#20214;
 async function initDataFile() {
   try {
+    const initJson = JSON.stringify({ records: [], updatedAt: new Date().toISOString() })
+    const initBytes = new TextEncoder().encode(initJson)
+    let initBinary = ''
+    initBytes.forEach(b => initBinary += String.fromCharCode(b))
     await ghPut(`/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_PATH}`, {
       message: '初始化数据文件',
-      content: btoa(JSON.stringify({ records: [], updatedAt: new Date().toISOString() }))
+      content: btoa(initBinary)
     })
   } catch (err) {
     console.error('初始化数据文件失败', err)
@@ -1139,12 +1156,17 @@ async function saveRecords() {
       // &#25991;&#20214;&#19981;&#23384;&#22312;&#65292;&#19981;&#38656;&#35201;SHA
     }
 
+    const jsonText = JSON.stringify({
+      records: state.records,
+      updatedAt: new Date().toISOString()
+    })
+    // UTF-8 → Base64（替代已废弃的 unescape）
+    const utf8Bytes = new TextEncoder().encode(jsonText)
+    let binary = ''
+    utf8Bytes.forEach(b => binary += String.fromCharCode(b))
     const payload = {
       message: `更新记录 ${getNowStr()}`,
-      content: btoa(unescape(encodeURIComponent(JSON.stringify({
-        records: state.records,
-        updatedAt: new Date().toISOString()
-      })))),
+      content: btoa(binary),
     }
     if (sha) payload.sha = sha
 
