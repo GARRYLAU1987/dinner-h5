@@ -1034,7 +1034,20 @@ async function loadRecords() {
   try {
     const file = await ghGet(`/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_PATH}`)
     state.dataSha = file.sha
-    const content = JSON.parse(atob(file.content))
+
+    let content
+    if (file.content && file.content.length > 10) {
+      // 小文件：直接解析 Base64 content
+      content = JSON.parse(atob(file.content))
+    } else if (file.download_url) {
+      // 大文件（>1MB）：GitHub 不返回 content，改用 download_url 下载
+      const res = await fetch(file.download_url)
+      const text = await res.text()
+      content = JSON.parse(text)
+    } else {
+      throw new Error('无法获取文件内容')
+    }
+
     state.records = content.records || []
     renderList()
     if (state.isAdmin) renderAdminList()
@@ -1702,8 +1715,15 @@ async function submitRecord() {
   try {
     const file = await ghGet(`/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_PATH}`)
     state.dataSha = file.sha
-    const content = JSON.parse(atob(file.content))
-    state.records = content.records || []
+    let content
+    if (file.content && file.content.length > 10) {
+      content = JSON.parse(atob(file.content))
+    } else if (file.download_url) {
+      const res = await fetch(file.download_url)
+      const text = await res.text()
+      content = JSON.parse(text)
+    }
+    if (content) state.records = content.records || []
   } catch (e) {
     // 忽略错误，使用内存中的数据
   }
