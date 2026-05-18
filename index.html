@@ -1252,7 +1252,7 @@
       <div class="form-label required">&#21442;&#19982;&#20154;&#21592;</div>
       <div class="tags-wrap" id="participantTags"></div>
       <div class="member-select-toggle" onclick="toggleMemberSelect('add')">
-        <span>&#128101; &#28857;&#20987;&#25321;&#24080;&#36890;&#25104;&#21592;&#21592;</span>
+        <span>&#128101; 点击选择成员</span>
         <span class="toggle-arrow" id="addMemberToggleArrow">&#9660;</span>
       </div>
       <div class="member-select-panel" id="addMemberSelectPanel" style="display:none">
@@ -1270,9 +1270,21 @@
         <span class="total-label">&#21512;&#35745;&#37329;&#39069;</span>
         <span class="total-amount" id="totalDisplay">&#165;0</span>
       </div>
-      <div class="input-row">
-        <input class="form-input flex-1" id="inputPayerName" placeholder="&#32467;&#36134;&#20154;&#22995;&#21517;">
-        <input class="form-input" id="inputPayerAmount" type="number" placeholder="&#37329;&#39069;" style="width:90px">
+      <div class="member-select-toggle" onclick="togglePayerMemberSelect('add')">
+        <span>&#128101; &#28857;&#20987;&#36873;&#25321;&#32467;&#36134;&#25104;&#21592;</span>
+        <span class="toggle-arrow" id="addPayerMemberToggleArrow">&#9660;</span>
+      </div>
+      <div class="member-select-panel" id="addPayerMemberSelectPanel" style="display:none">
+        <div id="addPayerMemberCheckboxList"></div>
+      </div>
+      <div class="input-row" style="margin-top:8px">
+        <input class="form-input flex-1" id="inputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#32467;&#36134;&#20154;&#22995;&#21517;">
+        <input class="form-input" id="inputPayerAmount" type="number" placeholder="&#37329;&#39069;" style="width:70px">
+        <select class="form-input" id="inputPayerNature" style="width:85px;font-size:13px">
+          <option value="慷慨宴请">慷慨宴请</option>
+          <option value="获利回馈">获利回馈</option>
+          <option value="其他">其他</option>
+        </select>
         <button class="btn-add" onclick="addPayer()">&#28155;&#21152;</button>
       </div>
     </div>
@@ -1324,7 +1336,7 @@
       <div class="form-label required">&#21442;&#19982;&#20154;&#21592;</div>
       <div class="tags-wrap" id="editParticipantTags"></div>
       <div class="member-select-toggle" onclick="toggleMemberSelect('edit')">
-        <span>&#128101; &#28857;&#20987;&#25321;&#24080;&#36890;&#25104;&#21592;&#21592;</span>
+        <span>&#128101; 点击选择成员</span>
         <span class="toggle-arrow" id="editMemberToggleArrow">&#9660;</span>
       </div>
       <div class="member-select-panel" id="editMemberSelectPanel" style="display:none">
@@ -1342,9 +1354,21 @@
         <span class="total-label">&#21512;&#35745;&#37329;&#39069;</span>
         <span class="total-amount" id="editTotalDisplay">&#165;0</span>
       </div>
-      <div class="input-row">
-        <input class="form-input flex-1" id="editInputPayerName" placeholder="&#32467;&#36134;&#20154;&#22995;&#21517;">
-        <input class="form-input" id="editInputPayerAmount" type="number" placeholder="&#37329;&#39069;" style="width:90px">
+      <div class="member-select-toggle" onclick="togglePayerMemberSelect('edit')">
+        <span>&#128101; &#28857;&#20987;&#36873;&#25321;&#32467;&#36134;&#25104;&#21592;</span>
+        <span class="toggle-arrow" id="editPayerMemberToggleArrow">&#9660;</span>
+      </div>
+      <div class="member-select-panel" id="editPayerMemberSelectPanel" style="display:none">
+        <div id="editPayerMemberCheckboxList"></div>
+      </div>
+      <div class="input-row" style="margin-top:8px">
+        <input class="form-input flex-1" id="editInputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#32467;&#36134;&#20154;&#22995;&#21517;">
+        <input class="form-input" id="editInputPayerAmount" type="number" placeholder="&#37329;&#39069;" style="width:70px">
+        <select class="form-input" id="editInputPayerNature" style="width:85px;font-size:13px">
+          <option value="慷慨宴请">慷慨宴请</option>
+          <option value="获利回馈">获利回馈</option>
+          <option value="其他">其他</option>
+        </select>
         <button class="btn-add" onclick="editAddPayer()">&#28155;&#21152;</button>
       </div>
     </div>
@@ -1741,6 +1765,7 @@ async function loadRecords() {
     checkApprovalStatus()
 
     renderList()
+    renderMemberCheckboxLists()
     if (state.isAdmin) {
       renderAdminList()
       renderPendingMembers()
@@ -2043,7 +2068,7 @@ function openDetail(id) {
   const payers = record.payers || []
   const payerRows = payers.map(p =>
     `<div class="payer-detail-item">
-      <span class="payer-detail-name-v">💳 ${escHtml(p.name)}</span>
+      <span class="payer-detail-name-v">💳 ${escHtml(p.name)} <span style="font-size:12px;color:#888">(${escHtml(p.nature || '其他')})</span></span>
       <span class="payer-detail-amt">¥${p.amount}</span>
     </div>`
   ).join('')
@@ -2307,10 +2332,11 @@ function editRemoveParticipant(index) {
 function editAddPayer() {
   const name = document.getElementById('editInputPayerName').value.trim()
   const amount = parseFloat(document.getElementById('editInputPayerAmount').value)
+  const nature = document.getElementById('editInputPayerNature').value
   if (!name) { showToast('请输入结账人姓名'); return }
   if (!amount || amount <= 0) { showToast('请输入有效金额'); return }
   if (state.editPayers.find(p => p.name === name)) { showToast('该结账人已添加'); return }
-  state.editPayers.push({ name, amount })
+  state.editPayers.push({ name, amount, nature })
   document.getElementById('editInputPayerName').value = ''
   document.getElementById('editInputPayerAmount').value = ''
   renderEditPayerList()
@@ -2329,7 +2355,7 @@ function renderEditPayerList() {
 
   list.innerHTML = state.editPayers.map((p, i) =>
     `<div class="payer-item">
-      <span class="payer-name">💳 ${escHtml(p.name)}</span>
+      <span class="payer-name">💳 ${escHtml(p.name)} <span style="font-size:11px;color:#888">(${escHtml(p.nature || '其他')})</span></span>
       <span class="payer-amount">¥${p.amount}</span>
       <span class="payer-del" onclick="editRemovePayer(${i})">✕</span>
     </div>`
@@ -2562,6 +2588,8 @@ function switchTab(tab) {
   }[tab] || '活动记账'
 
   if (tab === 'list') renderList()
+  if (tab === 'add') renderMemberCheckboxLists()
+  if (tab === 'edit') renderMemberCheckboxLists()
   if (tab === 'admin') {
     updateAdminPageUI()
     renderAdminList()
@@ -2611,10 +2639,11 @@ function removeParticipant(index) {
 function addPayer() {
   const name = document.getElementById('inputPayerName').value.trim()
   const amount = parseFloat(document.getElementById('inputPayerAmount').value)
+  const nature = document.getElementById('inputPayerNature').value
   if (!name) { showToast('请输入结账人姓名'); return }
   if (!amount || amount <= 0) { showToast('请输入有效金额'); return }
   if (state.payers.find(p => p.name === name)) { showToast('该结账人已添加'); return }
-  state.payers.push({ name, amount })
+  state.payers.push({ name, amount, nature })
   document.getElementById('inputPayerName').value = ''
   document.getElementById('inputPayerAmount').value = ''
   renderPayerList()
@@ -2633,7 +2662,7 @@ function renderPayerList() {
 
   list.innerHTML = state.payers.map((p, i) =>
     `<div class="payer-item">
-      <span class="payer-name">💳 ${escHtml(p.name)}</span>
+      <span class="payer-name">💳 ${escHtml(p.name)} <span style="font-size:11px;color:#888">(${escHtml(p.nature || '其他')})</span></span>
       <span class="payer-amount">¥${p.amount}</span>
       <span class="payer-del" onclick="removePayer(${i})">✕</span>
     </div>`
@@ -3247,6 +3276,62 @@ function toggleParticipantFromCheckbox(checkbox, type) {
   }
 }
 
+// 结账成员选择面板切换
+function togglePayerMemberSelect(type) {
+  const panel = document.getElementById(type === 'add' ? 'addPayerMemberSelectPanel' : 'editPayerMemberSelectPanel')
+  const arrow = document.getElementById(type === 'add' ? 'addPayerMemberToggleArrow' : 'editPayerMemberToggleArrow')
+  if (panel.style.display === 'none') {
+    renderPayerMemberCheckboxLists()
+    panel.style.display = 'block'
+    arrow.style.transform = 'rotate(180deg)'
+  } else {
+    panel.style.display = 'none'
+    arrow.style.transform = 'rotate(0deg)'
+  }
+}
+
+// 渲染结账成员勾选列表
+function renderPayerMemberCheckboxLists() {
+  const addList = document.getElementById('addPayerMemberCheckboxList')
+  const editList = document.getElementById('editPayerMemberCheckboxList')
+
+  let html = ''
+  for (const [id, member] of Object.entries(state.members)) {
+    if (!member.approved) continue
+    html += `<label class="member-checkbox-item">
+      <input type="checkbox" value="${escHtml(member.name)}"
+        onchange="togglePayerFromCheckbox(this, 'add')">
+      ${escHtml(member.name)}
+    </label>`
+  }
+  if (!html) html = '<div style="color:#999;font-size:13px;text-align:center;padding:10px">暂无已审核成员</div>'
+  if (addList) addList.innerHTML = html
+
+  html = ''
+  for (const [id, member] of Object.entries(state.members)) {
+    if (!member.approved) continue
+    html += `<label class="member-checkbox-item">
+      <input type="checkbox" value="${escHtml(member.name)}"
+        onchange="togglePayerFromCheckbox(this, 'edit')">
+      ${escHtml(member.name)}
+    </label>`
+  }
+  if (!html) html = '<div style="color:#999;font-size:13px;text-align:center;padding:10px">暂无已审核成员</div>'
+  if (editList) editList.innerHTML = html
+}
+
+// 从结账复选框选择成员（自动填入姓名输入框）
+function togglePayerFromCheckbox(checkbox, type) {
+  const name = checkbox.value
+  const nameInput = document.getElementById(type === 'add' ? 'inputPayerName' : 'editInputPayerName')
+  const amountInput = document.getElementById(type === 'add' ? 'inputPayerAmount' : 'editInputPayerAmount')
+  if (checkbox.checked) {
+    nameInput.value = name
+    amountInput.focus()
+  }
+  checkbox.checked = false
+}
+
 // 统计筛选状态
 let statsFilter = 'month'
 let currentStatsPeriod = ''
@@ -3377,18 +3462,18 @@ function renderMemberStats() {
 
   for (const rec of state.records) {
     if (!rec.payers) continue
-    // 兼容旧数据：慨慨宴请/感恩常在 映射为 慷慨宴请
-    const reason = (rec.reason || '').trim()
-    const normalizedReason = (reason === '慨慨宴请' || reason === '感恩常在') ? '慷慨宴请' : reason
 
     for (const payer of rec.payers) {
       if (!memberData[payer.name]) {
         memberData[payer.name] = { total: 0, hui: 0, chang: 0, other: 0 }
       }
       memberData[payer.name].total += payer.amount
-      if (normalizedReason === '获利回馈') {
+      // 优先使用 payer 自身的 nature（新数据），旧数据 fallback 到活动 reason
+      const nature = (payer.nature || rec.reason || '').trim()
+      const normalizedNature = (nature === '慨慨宴请' || nature === '感恩常在') ? '慷慨宴请' : nature
+      if (normalizedNature === '获利回馈') {
         memberData[payer.name].hui += payer.amount
-      } else if (normalizedReason === '慷慨宴请') {
+      } else if (normalizedNature === '慷慨宴请') {
         memberData[payer.name].chang += payer.amount
       } else {
         memberData[payer.name].other += payer.amount
