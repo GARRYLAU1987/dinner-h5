@@ -2094,10 +2094,13 @@ function openDetail(id) {
       </button>`
     : ''
 
+  // 主标题：备注优先，无备注则显示类别
+  const detailTitle = record.note || record.reason
+
   document.getElementById('detailContent').innerHTML = `
     <div class="detail-header">
       <span class="detail-emoji">🎉</span>
-      <div class="detail-reason">${escHtml(record.reason)}</div>
+      <div class="detail-reason">${escHtml(detailTitle)}</div>
       <span class="detail-date">${record.dinnerDate}</span>
     </div>
 
@@ -2105,13 +2108,13 @@ function openDetail(id) {
     ${editBtn}
 
     <div class="detail-card">
-      ${record.note ? `<div class="detail-row">
+      <div class="detail-row">
         <span class="detail-icon">📝</span>
         <div class="detail-content">
-          <div class="detail-sub">活动备注</div>
-          <div class="detail-val">${escHtml(record.note)}</div>
+          <div class="detail-sub">活动类别</div>
+          <div class="detail-val">${escHtml(record.reason)}</div>
         </div>
-      </div>` : ''}
+      </div>
       <div class="detail-row">
         <span class="detail-icon">📍</span>
         <div class="detail-content">
