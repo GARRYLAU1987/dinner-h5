@@ -2000,12 +2000,16 @@ function renderList() {
 
     const delBtn = `<button class="admin-del-btn" onclick="event.stopPropagation();confirmDeleteRecord('${r.id}','${escHtml(r.reason)}')">🗑️ 删除</button>`
 
+    // 主标题：备注优先，无备注则显示类别
+    const cardTitle = r.note || r.reason
+
     return `<div class="card ${adminClass}" onclick="openDetail('${r.id}')">
       ${delBtn}
       <div class="card-header">
-        <span class="card-reason">🎉 ${escHtml(r.reason)}</span>
+        <span class="card-reason">${escHtml(cardTitle)}</span>
         <span class="card-date">${r.dinnerDate}</span>
       </div>
+      <div class="card-row"><span class="row-icon">🎉</span><span class="row-text">${escHtml(r.reason)}</span></div>
       <div class="card-row"><span class="row-icon">📍</span><span class="row-text">${escHtml(r.location)}</span></div>
       <div class="card-row"><span class="row-icon">👥</span><span class="row-text">${escHtml(participantsStr)}</span></div>
       <div class="card-footer">
@@ -3270,14 +3274,18 @@ function renderMemberStats() {
   
   for (const rec of state.records) {
     if (!rec.payers) continue
+    // 兼容旧数据：感恩常在 映射为 慷慨宴请
+    const reason = (rec.reason || '').trim()
+    const normalizedReason = reason === '感恩常在' ? '慷慨宴请' : reason
+
     for (const payer of rec.payers) {
       if (!memberData[payer.name]) {
         memberData[payer.name] = { total: 0, hui: 0, chang: 0 }
       }
       memberData[payer.name].total += payer.amount
-      if (rec.reason === '获利回馈') {
+      if (normalizedReason === '获利回馈') {
         memberData[payer.name].hui += payer.amount
-      } else if (rec.reason === '慷慨宴请') {
+      } else if (normalizedReason === '慷慨宴请') {
         memberData[payer.name].chang += payer.amount
       }
     }
