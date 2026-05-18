@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>聚餐记录 🍽️</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #FF6B35;
+    --primary-light: #FF8C42;
+    --bg: #f5f5f5;
+    --card: #fff;
+    --text: #333;
+    --text-sub: #888;
+    --border: #f0f0f0;
+    --warn: #e74c3c;
+    --success: #27ae60;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: -apple-system, 'PingFang SC', sans-serif;
+    color: var(--text);
+    font-size: 14px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ===== 顶部导航 ===== */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    box-shadow: 0 2px 12px rgba(255,107,53,0.3);
+  }
+
+  .nav-title {
+    flex: 1;
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+  }
+
+  .nav-back {
+    width: 40px;
+    font-size: 20px;
+    color: #fff;
+    cursor: pointer;
+    display: none;
+  }
+
+  .nav-back.show { display: block; }
+
+  .nav-right { width: 40px; text-align: right; }
+
+  .nav-admin-icon { font-size: 20px; cursor: pointer; }
+
+  /* ===== Tab 栏 ===== */
+  .tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    background: #fff;
+    display: flex;
+    border-top: 1px solid #eee;
+    z-index: 100;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.05);
+  }
+
+  .tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0 12px;
+    cursor: pointer;
+    color: #999;
+    transition: color 0.2s;
+  }
+
+  .tab-item.active { color: var(--primary); }
+  .tab-icon { font-size: 22px; }
+  .tab-label { font-size: 11px; margin-top: 3px; }
+
+  /* ===== 主内容区 ===== */
+  .page {
+    display: none;
+    padding: 12px 12px 80px;
+    min-height: calc(100vh - 50px);
+  }
+
+  .page.active { display: block; }
+
+  /* ===== 统计头部 ===== */
+  .stats-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 6px 20px rgba(255,107,53,0.25);
+  }
+
+  .stats-item { display: flex; flex-direction: column; align-items: center; }
+  .stats-num { font-size: 28px; font-weight: 700; color: #fff; }
+  .stats-label { font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+  .stats-divider { width: 1px; height: 36px; background: rgba(255,255,255,0.3); }
+
+  /* ===== 卡片 ===== */
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    position: relative;
+  }
+
+  .card:active { transform: scale(0.99); }
+
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .card-reason { font-size: 16px; font-weight: 600; }
+  .card-date { font-size: 12px; color: #999; background: #f5f5f5; padding: 3px 10px; border-radius: 20px; }
+  .card-row { display: flex; align-items: flex-start; margin-bottom: 6px; }
+  .row-icon { font-size: 14px; margin-right: 6px; flex-shrink: 0; }
+  .row-text { font-size: 13px; color: #666; line-height: 1.5; flex: 1; }
+  .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .amount-badge { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff; font-size: 15px; font-weight: 700; padding: 4px 14px; border-radius: 20px; }
+  .photo-tag { font-size: 12px; color: #aaa; margin-top: 6px; }
+
+  /* 编辑标记 */
+  .edit-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #999;
+    background: #f5f5f5;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 6px;
+  }
+
+  .edit-badge svg { width: 12px; height: 12px; }
+
+  /* 管理员删除按钮 */
+  .admin-del-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #fff0ee;
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+    border-radius: 20px;
+    font-size: 12px;
+    padding: 4px 12px;
+    cursor: pointer;
+    z-index: 10;
+    display: none;
+  }
+
+  .admin-mode .admin-del-btn { display: block; }
+
+  /* 空状态 */
+  .empty { text-align: center; padding: 60px 20px; color: #bbb; }
+  .empty-emoji { font-size: 60px; display: block; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; }
+
+  /* ===== 表单页面 ===== */
+  .form-section {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .form-group { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f5f5f5; }
+  .form-group:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .form-label { font-size: 14px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+  .required::after { content: ' *'; color: var(--primary); }
+
+  .form-input {
+    width: 100%;
+    background: #f8f8f8;
+    border: 1.5px solid transparent;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+  }
+
+  .form-input:focus { border-color: var(--primary); background: #fff; }
+  textarea.form-input { resize: none; line-height: 1.5; }
+
+  .tags-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; min-height: 10px; }
+
+  .tag {
+    display: flex;
+    align-items: center;
+    background: #fff0ee;
+    border: 1px solid var(--primary-light);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 13px;
+    color: var(--primary);
+    gap: 6px;
+  }
+
+  .tag-x { font-size: 11px; cursor: pointer; opacity: 0.7; }
+
+  .input-row { display: flex; gap: 8px; align-items: center; }
+  .flex-1 { flex: 1; }
+
+  .btn-add {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+    flex-shrink: 0;
+  }
+
+  .payer-list { margin-bottom: 8px; }
+
+  .payer-item {
+    display: flex;
+    align-items: center;
+    background: #f8f8f8;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+  }
+
+  .payer-name { flex: 1; font-size: 14px; color: #333; }
+  .payer-amount { font-size: 15px; font-weight: 600; color: var(--primary); margin: 0 10px; }
+  .payer-del { font-size: 16px; color: #ccc; cursor: pointer; padding: 4px; }
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff5f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+  }
+
+  .total-label { font-size: 13px; color: #888; }
+  .total-amount { font-size: 20px; font-weight: 700; color: var(--primary); }
+
+  .image-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .image-thumb {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .image-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  .image-thumb-del {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 20px;
+    height: 20px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .image-add-btn {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    border: 2px dashed #ddd;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #bbb;
+  }
+
+  .image-add-btn span:first-child { font-size: 28px; line-height: 1; }
+  .image-add-btn span:last-child { font-size: 11px; margin-top: 4px; }
+
+  .submit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: #fff;
+    border: none;
+    border-radius: 28px;
+    padding: 16px 0;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(255,107,53,0.3);
+    font-family: inherit;
+  }
+
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .btn-edit-record {
+    width: 100%;
+    background: #fff;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    border-radius: 28px;
+    padding: 14px 0;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .btn-edit-record:active { background: #fff5f0; }
+
+  /* ===== 详情页面 ===== */
+  .detail-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border-radius: 16px;
+    padding: 24px 20px;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+
+  .detail-emoji { font-size: 48px; display: block; margin-bottom: 10px; }
+  .detail-reason { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .detail-date { font-size: 13px; color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.2); padding: 4px 14px; border-radius: 20px; display: inline-block; }
+
+  .detail-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 4px 0;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .detail-row { display: flex; align-items: flex-start; padding: 14px 16px; }
+  .detail-row + .detail-row { border-top: 1px solid #f5f5f5; }
+
+  .detail-icon { font-size: 20px; margin-right: 12px; flex-shrink: 0; }
+  .detail-content { flex: 1; }
+  .detail-sub { font-size: 12px; color: #aaa; margin-bottom: 4px; }
+  .detail-val { font-size: 15px; color: #333; }
+
+  .p-tags-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+
+  .p-tag {
+    background: #fff0ee;
+    color: var(--primary);
+    border: 1px solid var(--primary-light);
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 13px;
+  }
+
+  .payer-detail-item { display: flex; justify-content: space-between; padding: 6px 0; }
+  .payer-detail-name-v { font-size: 14px; color: #555; }
+  .payer-detail-amt { font-size: 14px; font-weight: 500; color: #333; }
+
+  .total-line { display: flex; justify-content: space-between; padding: 10px 0 0; margin-top: 6px; border-top: 1px dashed #eee; }
+  .total-line-label { font-size: 13px; color: #999; }
+  .total-line-amt { font-size: 22px; font-weight: 700; color: var(--primary); }
+
+  .detail-images-grid { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px; }
+  .detail-img { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; cursor: pointer; }
+
+  .detail-sub-text { font-size: 12px; color: #ccc; text-align: center; padding: 8px 0 16px; }
+
+  /* 修改记录区域 */
+  .edit-history-card {
+    background: #fff8f5;
+    border: 1px solid #ffd4c4;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .edit-history-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .edit-history-item {
+    background: #fff;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+
+  .edit-history-item:last-child { margin-bottom: 0; }
+
+  .edit-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .edit-history-editor { font-size: 13px; font-weight: 600; color: #333; }
+  .edit-history-time { font-size: 11px; color: #999; }
+
+  .edit-history-changes {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.6;
+    background: #f9f9f9;
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+
+  .edit-history-empty {
+    font-size: 13px;
+    color: #999;
+    text-align: center;
+    padding: 10px;
+  }
+
+  /* ===== 管理页 ===== */
+  .admin-status-card {
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .admin-status-card.is-admin { background: linear-gradient(135deg, var(--primary), var(--primary-light)); }
+  .admin-status-card.not-admin { background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+
+  .admin-card-icon { font-size: 40px; }
+  .admin-card-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .is-admin .admin-card-title, .is-admin .admin-card-desc { color: #fff; }
+  .not-admin .admin-card-title { color: #333; }
+  .admin-card-desc { font-size: 12px; line-height: 1.5; }
+  .not-admin .admin-card-desc { color: #999; }
+
+  .my-id-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .my-id-label { font-size: 12px; color: #aaa; margin-bottom: 8px; }
+
+  .my-id-box {
+    background: #f8f8f8;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .my-id-val { flex: 1; font-size: 12px; color: #555; word-break: break-all; }
+  .copy-icon { font-size: 16px; flex-shrink: 0; color: var(--primary); }
+  .my-id-tip { font-size: 11px; color: #ccc; }
+
+  .admin-records-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .admin-records-title { font-size: 15px; font-weight: 600; color: #333; }
+  .admin-records-count { font-size: 12px; color: #999; }
+
+  .admin-record-item {
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .admin-record-info { flex: 1; }
+  .admin-record-reason { font-size: 15px; font-weight: 600; color: #333; margin-bottom: 4px; }
+  .admin-record-meta { font-size: 12px; color: #aaa; }
+
+  .admin-del-record-btn {
+    background: #fff0ee;
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: inherit;
+  }
+
+  /* ===== 模态框 ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal-box {
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 480px;
+    padding: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #333; }
+
+  .modal-footer { display: flex; gap: 10px; margin-top: 16px; }
+
+  .btn-cancel {
+    flex: 1;
+    background: #f5f5f5;
+    color: #666;
+    border: none;
+    border-radius: 20px;
+    padding: 12px 0;
+    font-size: 15px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .btn-confirm-danger {
+    flex: 1;
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 12px 0;
+    font-size: 15px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+  }
+
+  .toast.show { opacity: 1; }
+
+  /* 图片预览 */
+  .img-preview-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .img-preview-overlay.show { display: flex; }
+  .img-preview-overlay img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .img-preview-close { position: absolute; top: 16px; right: 16px; color: #fff; font-size: 28px; cursor: pointer; }
+
+  /* 管理员登录弹窗 */
+  .admin-login-tip { font-size: 13px; color: #999; text-align: center; margin-top: 10px; }
+
+  input[type=file] { display: none; }
+
+  /* 编辑模式提示 */
+  .edit-mode-banner {
+    background: #fff8f5;
+    border: 1px solid #ffd4c4;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .edit-mode-banner svg { flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="nav">
+  <div class="nav-back" id="navBack" onclick="goBack()">←</div>
+  <div class="nav-title" id="navTitle">聚餐记录 🍽️</div>
+  <div class="nav-right">
+    <span class="nav-admin-icon" id="adminToggle" onclick="toggleAdminMode()" title="管理员入口">🛡️</span>
+  </div>
+</div>
+
+<!-- ===== 主页（记录列表） ===== -->
+<div class="page active" id="page-list">
+  <div class="stats-header" id="statsHeader">
+    <div class="stats-item">
+      <span class="stats-num" id="totalCount">0</span>
+      <span class="stats-label">次聚餐</span>
+    </div>
+    <div class="stats-divider"></div>
+    <div class="stats-item">
+      <span class="stats-num" id="totalAmount">¥0</span>
+      <span class="stats-label">累计消费</span>
+    </div>
+  </div>
+  <div id="recordList">
+    <div class="empty">
+      <span class="empty-emoji">🍽️</span>
+      <span class="empty-text">还没有聚餐记录<br>切换到「新增」开始记录吧</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 新增页面 ===== -->
+<div class="page" id="page-add">
+  <div class="form-section">
+    <div class="form-group">
+      <div class="form-label required">聚餐事由</div>
+      <input class="form-input" id="inputReason" placeholder="如：生日聚餐、季度团建、升职庆祝..." maxlength="50">
+    </div>
+    <div class="form-group">
+      <div class="form-label required">聚餐地点</div>
+      <input class="form-input" id="inputLocation" placeholder="如：xx火锅店、xx酒楼...">
+    </div>
+    <div class="form-group">
+      <div class="form-label required">聚餐日期</div>
+      <input class="form-input" id="inputDate" type="date">
+    </div>
+    <div class="form-group">
+      <div class="form-label required">参与人员</div>
+      <div class="tags-wrap" id="participantTags"></div>
+      <div class="input-row">
+        <input class="form-input flex-1" id="inputParticipant" placeholder="输入姓名，回车添加">
+        <button class="btn-add" onclick="addParticipant()">添加</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="form-label required">结账明细（支持多人联合）</div>
+      <div class="payer-list" id="payerList"></div>
+      <div class="total-row" id="totalRow" style="display:none">
+        <span class="total-label">合计金额</span>
+        <span class="total-amount" id="totalDisplay">¥0</span>
+      </div>
+      <div class="input-row">
+        <input class="form-input flex-1" id="inputPayerName" placeholder="结账人姓名">
+        <input class="form-input" id="inputPayerAmount" type="number" placeholder="金额" style="width:90px">
+        <button class="btn-add" onclick="addPayer()">添加</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="form-label">佐证图片（可选）</div>
+      <div class="image-grid" id="imageGrid">
+        <div class="image-add-btn" onclick="document.getElementById('fileInput').click()">
+          <span>+</span><span>添加图片</span>
+        </div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" multiple onchange="handleImages(event)">
+    </div>
+  </div>
+  <button class="submit-btn" id="submitBtn" onclick="submitRecord()">提交记录</button>
+</div>
+
+<!-- ===== 编辑页面 ===== -->
+<div class="page" id="page-edit">
+  <div class="edit-mode-banner">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M11.5 2.5L13.5 4.5L5 13H3V11L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>正在编辑记录，修改后会在历史中留存</span>
+  </div>
+  <div class="form-section">
+    <div class="form-group">
+      <div class="form-label required">聚餐事由</div>
+      <input class="form-input" id="editReason" placeholder="聚餐事由">
+    </div>
+    <div class="form-group">
+      <div class="form-label required">聚餐地点</div>
+      <input class="form-input" id="editLocation" placeholder="聚餐地点">
+    </div>
+    <div class="form-group">
+      <div class="form-label required">聚餐日期</div>
+      <input class="form-input" id="editDate" type="date">
+    </div>
+    <div class="form-group">
+      <div class="form-label required">参与人员</div>
+      <div class="tags-wrap" id="editParticipantTags"></div>
+      <div class="input-row">
+        <input class="form-input flex-1" id="editInputParticipant" placeholder="输入姓名，回车添加">
+        <button class="btn-add" onclick="editAddParticipant()">添加</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="form-label required">结账明细</div>
+      <div class="payer-list" id="editPayerList"></div>
+      <div class="total-row" id="editTotalRow" style="display:none">
+        <span class="total-label">合计金额</span>
+        <span class="total-amount" id="editTotalDisplay">¥0</span>
+      </div>
+      <div class="input-row">
+        <input class="form-input flex-1" id="editInputPayerName" placeholder="结账人姓名">
+        <input class="form-input" id="editInputPayerAmount" type="number" placeholder="金额" style="width:90px">
+        <button class="btn-add" onclick="editAddPayer()">添加</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="form-label">佐证图片（可选）</div>
+      <div class="image-grid" id="editImageGrid">
+        <div class="image-add-btn" onclick="document.getElementById('editFileInput').click()">
+          <span>+</span><span>添加图片</span>
+        </div>
+      </div>
+      <input type="file" id="editFileInput" accept="image/*" multiple onchange="handleEditImages(event)">
+    </div>
+  </div>
+  <button class="submit-btn" id="editSubmitBtn" onclick="saveEditRecord()">保存修改</button>
+</div>
+
+<!-- ===== 详情页面 ===== -->
+<div class="page" id="page-detail">
+  <div id="detailContent"></div>
+</div>
+
+<!-- ===== 管理页面 ===== -->
+<div class="page" id="page-admin">
+  <div class="admin-status-card" id="adminStatusCard">
+    <span class="admin-card-icon" id="adminCardIcon">👤</span>
+    <div>
+      <div class="admin-card-title" id="adminCardTitle">普通用户</div>
+      <div class="admin-card-desc" id="adminCardDesc">如需管理员权限，请联系管理员添加您的 ID</div>
+    </div>
+  </div>
+
+  <div class="my-id-card">
+    <div class="my-id-label">我的用户 ID</div>
+    <div class="my-id-box" onclick="copyMyId()">
+      <span class="my-id-val" id="myIdDisplay">生成中...</span>
+      <span class="copy-icon">📋</span>
+    </div>
+    <div class="my-id-tip">将此 ID 提供给管理员，即可获得管理权限</div>
+  </div>
+
+  <div id="adminRecordsSection" style="display:none">
+    <div class="admin-records-header">
+      <span class="admin-records-title">全部记录管理</span>
+      <span class="admin-records-count" id="adminRecordCount">共 0 条</span>
+    </div>
+    <div id="adminRecordList"></div>
+  </div>
+
+  <div id="adminLoginSection">
+    <button class="submit-btn" onclick="showAdminLogin()" style="background: #555; box-shadow: none;">
+      🔐 管理员验证
+    </button>
+    <div class="admin-login-tip">输入管理员密码以获取管理权限</div>
+  </div>
+</div>
+
+<!-- ===== Tab 栏 ===== -->
+<div class="tab-bar">
+  <div class="tab-item active" id="tab-list" onclick="switchTab('list')">
+    <span class="tab-icon">🍽️</span>
+    <span class="tab-label">聚餐记录</span>
+  </div>
+  <div class="tab-item" id="tab-add" onclick="switchTab('add')">
+    <span class="tab-icon">➕</span>
+    <span class="tab-label">新增记录</span>
+  </div>
+  <div class="tab-item" id="tab-admin" onclick="switchTab('admin')">
+    <span class="tab-icon">🛡️</span>
+    <span class="tab-label">管理</span>
+  </div>
+</div>
+
+<!-- ===== 删除确认弹窗 ===== -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-title">⚠️ 确认删除</div>
+    <p id="deleteModalContent" style="font-size:14px;color:#666;line-height:1.6"></p>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeDeleteModal()">取消</button>
+      <button class="btn-confirm-danger" onclick="confirmDelete()">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 管理员验证弹窗 ===== -->
+<div class="modal-overlay" id="adminLoginModal">
+  <div class="modal-box">
+    <div class="modal-title">🔐 管理员验证</div>
+    <p style="font-size:13px;color:#999;margin-bottom:12px">默认密码：admin123（部署后请修改）</p>
+    <input class="form-input" id="adminPwdInput" type="password" placeholder="输入管理员密码">
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeAdminLogin()">取消</button>
+      <button class="btn-confirm-danger" style="background:var(--primary)" onclick="verifyAdmin()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 图片预览 ===== -->
+<div class="img-preview-overlay" id="imgPreview" onclick="closeImgPreview()">
+  <span class="img-preview-close">✕</span>
+  <img id="previewImg" src="" alt="预览">
+</div>
+
+<!-- ===== Toast ===== -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// 数据存储（localStorage）
+// ============================================================
+const STORAGE_KEY = 'dinner_records_v3'
+const ADMIN_KEY = 'dinner_admin_v3'
+const USER_ID_KEY = 'dinner_user_id'
+const USER_NAME_KEY = 'dinner_user_name'
+const ADMIN_PASSWORD = 'admin123'
+
+const ADMIN_IDS_KEY = 'dinner_admin_ids'
+
+// 状态
+let state = {
+  records: [],
+  isAdmin: false,
+  myId: '',
+  myName: '',
+  currentDetailId: null,
+  deleteTargetId: null,
+  // 新增表单
+  participants: [],
+  payers: [],
+  images: [],
+  // 编辑表单
+  editRecordId: null,
+  editParticipants: [],
+  editPayers: [],
+  editImages: [],
+  // 列表页管理员模式
+  adminMode: false
+}
+
+// ============================================================
+// 初始化
+// ============================================================
+function init() {
+  // 获取或生成用户 ID
+  let myId = localStorage.getItem(USER_ID_KEY)
+  if (!myId) {
+    myId = 'user_' + Math.random().toString(36).substr(2, 12) + Date.now().toString(36)
+    localStorage.setItem(USER_ID_KEY, myId)
+  }
+  state.myId = myId
+  document.getElementById('myIdDisplay').textContent = myId
+
+  // 获取或设置用户名
+  let myName = localStorage.getItem(USER_NAME_KEY)
+  if (!myName) {
+    myName = '用户_' + Math.random().toString(36).substr(2, 4)
+    localStorage.setItem(USER_NAME_KEY, myName)
+  }
+  state.myName = myName
+
+  // 检查是否管理员
+  const adminIds = getAdminIds()
+  state.isAdmin = adminIds.includes(myId) || localStorage.getItem(ADMIN_KEY) === 'true'
+  updateAdminPageUI()
+  loadRecords()
+
+  // 设置今天日期
+  document.getElementById('inputDate').value = getTodayStr()
+
+  // 回车添加参与人
+  document.getElementById('inputParticipant').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addParticipant()
+  })
+  document.getElementById('editInputParticipant').addEventListener('keydown', e => {
+    if (e.key === 'Enter') editAddParticipant()
+  })
+}
+
+function getAdminIds() {
+  try {
+    return JSON.parse(localStorage.getItem(ADMIN_IDS_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
+
+function getTodayStr() {
+  const d = new Date()
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0')
+}
+
+function getNowStr() {
+  return new Date().toLocaleString('zh-CN')
+}
+
+// ============================================================
+// 记录数据
+// ============================================================
+function loadRecords() {
+  try {
+    state.records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+  } catch {
+    state.records = []
+  }
+  renderList()
+  if (state.isAdmin && document.getElementById('page-admin').classList.contains('active')) {
+    renderAdminList()
+  }
+}
+
+function saveRecords() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.records))
+}
+
+// ============================================================
+// 渲染列表
+// ============================================================
+function renderList() {
+  const list = document.getElementById('recordList')
+  const records = [...state.records].sort((a, b) => b.dinnerDate.localeCompare(a.dinnerDate))
+  const totalAmt = records.reduce((s, r) => s + (r.totalAmount || 0), 0)
+
+  document.getElementById('totalCount').textContent = records.length
+  document.getElementById('totalAmount').textContent = '¥' + totalAmt.toFixed(2)
+
+  if (records.length === 0) {
+    list.innerHTML = `<div class="empty">
+      <span class="empty-emoji">🍽️</span>
+      <span class="empty-text">还没有聚餐记录<br>切换到「新增」开始记录吧</span>
+    </div>`
+    return
+  }
+
+  const adminClass = state.adminMode ? 'admin-mode' : ''
+
+  list.innerHTML = records.map(r => {
+    const participantsStr = (r.participants || []).join('、')
+    const payersStr = (r.payers || []).map(p => `${p.name}(¥${p.amount})`).join(' + ')
+    const imgTag = r.images && r.images.length > 0 ? `<div class="photo-tag">📷 ${r.images.length} 张图片</div>` : ''
+
+    // 显示最后修改信息
+    let editBadge = ''
+    if (r.lastEditTime) {
+      editBadge = `<div class="edit-badge">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+          <path d="M11.5 2.5L13.5 4.5L5 13H3V11L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        ${escHtml(r.lastEditorName || '未知')} ${r.lastEditTime}
+      </div>`
+    }
+
+    const delBtn = `<button class="admin-del-btn" onclick="event.stopPropagation();confirmDeleteRecord('${r.id}','${escHtml(r.reason)}')">🗑️ 删除</button>`
+
+    return `<div class="card ${adminClass}" onclick="openDetail('${r.id}')">
+      ${delBtn}
+      <div class="card-header">
+        <span class="card-reason">🎉 ${escHtml(r.reason)}</span>
+        <span class="card-date">${r.dinnerDate}</span>
+      </div>
+      <div class="card-row"><span class="row-icon">📍</span><span class="row-text">${escHtml(r.location)}</span></div>
+      <div class="card-row"><span class="row-icon">👥</span><span class="row-text">${escHtml(participantsStr)}</span></div>
+      <div class="card-footer">
+        <div class="card-row" style="margin:0;flex:1"><span class="row-icon">💳</span><span class="row-text">${escHtml(payersStr)}</span></div>
+        <span class="amount-badge">¥${(r.totalAmount || 0).toFixed(2)}</span>
+      </div>
+      ${imgTag}
+      ${editBadge}
+    </div>`
+  }).join('')
+}
+
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+// ============================================================
+// 详情页
+// ============================================================
+function openDetail(id) {
+  const record = state.records.find(r => r.id === id)
+  if (!record) return
+  state.currentDetailId = id
+
+  const payers = record.payers || []
+  const payerRows = payers.map(p =>
+    `<div class="payer-detail-item">
+      <span class="payer-detail-name-v">💳 ${escHtml(p.name)}</span>
+      <span class="payer-detail-amt">¥${p.amount}</span>
+    </div>`
+  ).join('')
+
+  const participantTags = (record.participants || [])
+    .map(p => `<span class="p-tag">${escHtml(p)}</span>`).join('')
+
+  const imgSection = record.images && record.images.length > 0
+    ? `<div class="detail-card">
+        <div class="detail-row" style="padding-bottom:0">
+          <span class="detail-icon">📷</span>
+          <div class="detail-content">
+            <div class="detail-sub">佐证图片</div>
+          </div>
+        </div>
+        <div class="detail-images-grid">
+          ${record.images.map((img, i) =>
+            `<img class="detail-img" src="${img}" onclick="previewImg('${id}',${i})">`
+          ).join('')}
+        </div>
+      </div>` : ''
+
+  // 修改历史
+  const historySection = renderEditHistory(record)
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="detail-header">
+      <span class="detail-emoji">🎉</span>
+      <div class="detail-reason">${escHtml(record.reason)}</div>
+      <span class="detail-date">${record.dinnerDate}</span>
+    </div>
+
+    <button class="btn-edit-record" onclick="startEditRecord('${record.id}')">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M11.5 2.5L13.5 4.5L5 13H3V11L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      编辑此记录
+    </button>
+
+    <div class="detail-card">
+      <div class="detail-row">
+        <span class="detail-icon">📍</span>
+        <div class="detail-content">
+          <div class="detail-sub">聚餐地点</div>
+          <div class="detail-val">${escHtml(record.location)}</div>
+        </div>
+      </div>
+      <div class="detail-row">
+        <span class="detail-icon">👥</span>
+        <div class="detail-content">
+          <div class="detail-sub">参与人员（${(record.participants||[]).length}人）</div>
+          <div class="p-tags-wrap">${participantTags}</div>
+        </div>
+      </div>
+      <div class="detail-row">
+        <span class="detail-icon">💳</span>
+        <div class="detail-content">
+          <div class="detail-sub">结账明细</div>
+          ${payerRows}
+          <div class="total-line">
+            <span class="total-line-label">合计</span>
+            <span class="total-line-amt">¥${(record.totalAmount || 0).toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${imgSection}
+
+    ${historySection}
+
+    <div class="detail-sub-text">
+      由 ${escHtml(record.submitterName || '匿名')} 创建于 ${record.createdAt || record.dinnerDate}
+      ${record.lastEditTime ? '<br>最后由 ' + escHtml(record.lastEditorName || '未知') + ' 修改于 ' + record.lastEditTime : ''}
+    </div>
+  `
+
+  switchToPage('detail')
+  document.getElementById('navBack').classList.add('show')
+  document.getElementById('navTitle').textContent = '聚餐详情'
+}
+
+// 渲染修改历史
+function renderEditHistory(record) {
+  if (!record.editHistory || record.editHistory.length === 0) {
+    return ''
+  }
+
+  const historyItems = record.editHistory.map(h => `
+    <div class="edit-history-item">
+      <div class="edit-history-header">
+        <span class="edit-history-editor">✏️ ${escHtml(h.editorName || '未知')}</span>
+        <span class="edit-history-time">${h.editTime}</span>
+      </div>
+      <div class="edit-history-changes">${escHtml(h.changes || '内容已修改')}</div>
+    </div>
+  `).join('')
+
+  return `
+    <div class="edit-history-card">
+      <div class="edit-history-title">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <path d="M13.5 4.5L11.5 2.5L13 1L15 3L13.5 4.5Z" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M11.5 2.5L3 11V14H6L14.5 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        修改历史（共 ${record.editHistory.length} 次）
+      </div>
+      ${historyItems}
+    </div>
+  `
+}
+
+function previewImg(recordId, index) {
+  const record = state.records.find(r => r.id === recordId)
+  if (!record || !record.images) return
+  document.getElementById('previewImg').src = record.images[index]
+  document.getElementById('imgPreview').classList.add('show')
+}
+
+function closeImgPreview() {
+  document.getElementById('imgPreview').classList.remove('show')
+}
+
+function goBack() {
+  switchTab('list')
+}
+
+// ============================================================
+// 编辑功能
+// ============================================================
+function startEditRecord(id) {
+  const record = state.records.find(r => r.id === id)
+  if (!record) return
+
+  state.editRecordId = id
+  state.editParticipants = [...(record.participants || [])]
+  state.editPayers = [...(record.payers || [])]
+  state.editImages = [...(record.images || [])]
+
+  // 填充表单
+  document.getElementById('editReason').value = record.reason || ''
+  document.getElementById('editLocation').value = record.location || ''
+  document.getElementById('editDate').value = record.dinnerDate || ''
+
+  renderEditParticipantTags()
+  renderEditPayerList()
+  renderEditImageGrid()
+
+  switchToPage('edit')
+  document.getElementById('navBack').classList.add('show')
+  document.getElementById('navTitle').textContent = '编辑记录'
+}
+
+function editAddParticipant() {
+  const input = document.getElementById('editInputParticipant')
+  const name = input.value.trim()
+  if (!name) return
+  if (state.editParticipants.includes(name)) { showToast('该人员已添加'); return }
+  state.editParticipants.push(name)
+  input.value = ''
+  renderEditParticipantTags()
+}
+
+function renderEditParticipantTags() {
+  const wrap = document.getElementById('editParticipantTags')
+  wrap.innerHTML = state.editParticipants.map((p, i) =>
+    `<span class="tag">${escHtml(p)}<span class="tag-x" onclick="editRemoveParticipant(${i})">✕</span></span>`
+  ).join('')
+}
+
+function editRemoveParticipant(index) {
+  state.editParticipants.splice(index, 1)
+  renderEditParticipantTags()
+}
+
+function editAddPayer() {
+  const name = document.getElementById('editInputPayerName').value.trim()
+  const amount = parseFloat(document.getElementById('editInputPayerAmount').value)
+  if (!name) { showToast('请输入结账人姓名'); return }
+  if (!amount || amount <= 0) { showToast('请输入有效金额'); return }
+  if (state.editPayers.find(p => p.name === name)) { showToast('该结账人已添加'); return }
+  state.editPayers.push({ name, amount })
+  document.getElementById('editInputPayerName').value = ''
+  document.getElementById('editInputPayerAmount').value = ''
+  renderEditPayerList()
+}
+
+function renderEditPayerList() {
+  const list = document.getElementById('editPayerList')
+  const totalRow = document.getElementById('editTotalRow')
+  const totalDisplay = document.getElementById('editTotalDisplay')
+
+  if (state.editPayers.length === 0) {
+    list.innerHTML = ''
+    totalRow.style.display = 'none'
+    return
+  }
+
+  list.innerHTML = state.editPayers.map((p, i) =>
+    `<div class="payer-item">
+      <span class="payer-name">💳 ${escHtml(p.name)}</span>
+      <span class="payer-amount">¥${p.amount}</span>
+      <span class="payer-del" onclick="editRemovePayer(${i})">✕</span>
+    </div>`
+  ).join('')
+
+  const total = state.editPayers.reduce((s, p) => s + p.amount, 0)
+  totalDisplay.textContent = '¥' + total.toFixed(2)
+  totalRow.style.display = 'flex'
+}
+
+function editRemovePayer(index) {
+  state.editPayers.splice(index, 1)
+  renderEditPayerList()
+}
+
+function handleEditImages(event) {
+  const files = Array.from(event.target.files)
+  const remaining = 9 - state.editImages.length
+  const toAdd = files.slice(0, remaining)
+
+  toAdd.forEach(file => {
+    const reader = new FileReader()
+    reader.onload = e => {
+      state.editImages.push(e.target.result)
+      renderEditImageGrid()
+    }
+    reader.readAsDataURL(file)
+  })
+  event.target.value = ''
+}
+
+function renderEditImageGrid() {
+  const grid = document.getElementById('editImageGrid')
+  const thumbs = state.editImages.map((img, i) =>
+    `<div class="image-thumb">
+      <img src="${img}" onclick="previewBase64(${i})">
+      <div class="image-thumb-del" onclick="editRemoveImage(${i})">✕</div>
+    </div>`
+  ).join('')
+
+  const addBtn = state.editImages.length < 9
+    ? `<div class="image-add-btn" onclick="document.getElementById('editFileInput').click()"><span>+</span><span>添加图片</span></div>`
+    : ''
+
+  grid.innerHTML = thumbs + addBtn
+}
+
+function editRemoveImage(index) {
+  state.editImages.splice(index, 1)
+  renderEditImageGrid()
+}
+
+function previewBase64(index) {
+  document.getElementById('previewImg').src = state.editImages[index]
+  document.getElementById('imgPreview').classList.add('show')
+}
+
+function saveEditRecord() {
+  if (!state.editRecordId) return
+
+  const reason = document.getElementById('editReason').value.trim()
+  const location = document.getElementById('editLocation').value.trim()
+  const dinnerDate = document.getElementById('editDate').value
+
+  if (!reason) { showToast('请填写聚餐事由'); return }
+  if (!location) { showToast('请填写聚餐地点'); return }
+  if (!dinnerDate) { showToast('请选择聚餐日期'); return }
+  if (state.editParticipants.length === 0) { showToast('请添加至少一名参与人'); return }
+  if (state.editPayers.length === 0) { showToast('请添加至少一名结账人'); return }
+
+  const record = state.records.find(r => r.id === state.editRecordId)
+  if (!record) return
+
+  const total = state.editPayers.reduce((s, p) => s + p.amount, 0)
+
+  // 生成修改记录
+  const oldReason = record.reason
+  const oldLocation = record.location
+  const oldAmount = record.totalAmount
+  const oldParticipants = record.participants ? record.participants.join('、') : ''
+  const newParticipants = state.editParticipants.join('、')
+  const newAmount = parseFloat(total.toFixed(2))
+
+  let changes = []
+  if (oldReason !== reason) changes.push(`事由：「${oldReason}」→「${reason}」`)
+  if (oldLocation !== location) changes.push(`地点：「${oldLocation}」→「${location}」`)
+  if (oldAmount !== newAmount) changes.push(`金额：¥${oldAmount}→¥${newAmount}`)
+  if (oldParticipants !== newParticipants) changes.push(`参与人：「${oldParticipants}」→「${newParticipants}」`)
+
+  const changeText = changes.length > 0 ? changes.join('；') : '内容已修改'
+
+  // 更新记录
+  record.reason = reason
+  record.location = location
+  record.dinnerDate = dinnerDate
+  record.totalAmount = newAmount
+  record.participants = [...state.editParticipants]
+  record.payers = [...state.editPayers]
+  record.images = [...state.editImages]
+
+  // 记录修改历史
+  if (!record.editHistory) record.editHistory = []
+  record.editHistory.unshift({
+    editorId: state.myId,
+    editorName: state.myName,
+    editTime: getNowStr(),
+    changes: changeText
+  })
+
+  // 如果超过10条历史，只保留最近10条
+  if (record.editHistory.length > 10) {
+    record.editHistory = record.editHistory.slice(0, 10)
+  }
+
+  // 最后修改人信息
+  record.lastEditorId = state.myId
+  record.lastEditorName = state.myName
+  record.lastEditTime = getNowStr()
+
+  saveRecords()
+  showToast('✅ 修改已保存')
+  setTimeout(() => openDetail(state.editRecordId), 800)
+}
+
+// ============================================================
+// Tab 切换
+// ============================================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'))
+  document.getElementById(`tab-${tab}`).classList.add('active')
+  switchToPage(tab)
+  document.getElementById('navBack').classList.remove('show')
+  document.getElementById('navTitle').textContent = {
+    list: '聚餐记录 🍽️',
+    add: '新增聚餐记录',
+    edit: '编辑记录',
+    admin: '管理中心',
+    detail: '聚餐详情'
+  }[tab] || '聚餐记录'
+
+  if (tab === 'list') renderList()
+  if (tab === 'admin') renderAdminList()
+}
+
+function switchToPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.getElementById(`page-${page}`).classList.add('active')
+}
+
+// ============================================================
+// 新增记录
+// ============================================================
+function addParticipant() {
+  const input = document.getElementById('inputParticipant')
+  const name = input.value.trim()
+  if (!name) return
+  if (state.participants.includes(name)) { showToast('该人员已添加'); return }
+  state.participants.push(name)
+  input.value = ''
+  renderParticipantTags()
+}
+
+function renderParticipantTags() {
+  const wrap = document.getElementById('participantTags')
+  wrap.innerHTML = state.participants.map((p, i) =>
+    `<span class="tag">${escHtml(p)}<span class="tag-x" onclick="removeParticipant(${i})">✕</span></span>`
+  ).join('')
+}
+
+function removeParticipant(index) {
+  state.participants.splice(index, 1)
+  renderParticipantTags()
+}
+
+function addPayer() {
+  const name = document.getElementById('inputPayerName').value.trim()
+  const amount = parseFloat(document.getElementById('inputPayerAmount').value)
+  if (!name) { showToast('请输入结账人姓名'); return }
+  if (!amount || amount <= 0) { showToast('请输入有效金额'); return }
+  if (state.payers.find(p => p.name === name)) { showToast('该结账人已添加'); return }
+  state.payers.push({ name, amount })
+  document.getElementById('inputPayerName').value = ''
+  document.getElementById('inputPayerAmount').value = ''
+  renderPayerList()
+}
+
+function renderPayerList() {
+  const list = document.getElementById('payerList')
+  const totalRow = document.getElementById('totalRow')
+  const totalDisplay = document.getElementById('totalDisplay')
+
+  if (state.payers.length === 0) {
+    list.innerHTML = ''
+    totalRow.style.display = 'none'
+    return
+  }
+
+  list.innerHTML = state.payers.map((p, i) =>
+    `<div class="payer-item">
+      <span class="payer-name">💳 ${escHtml(p.name)}</span>
+      <span class="payer-amount">¥${p.amount}</span>
+      <span class="payer-del" onclick="removePayer(${i})">✕</span>
+    </div>`
+  ).join('')
+
+  const total = state.payers.reduce((s, p) => s + p.amount, 0)
+  totalDisplay.textContent = '¥' + total.toFixed(2)
+  totalRow.style.display = 'flex'
+}
+
+function removePayer(index) {
+  state.payers.splice(index, 1)
+  renderPayerList()
+}
+
+function handleImages(event) {
+  const files = Array.from(event.target.files)
+  const remaining = 9 - state.images.length
+  const toAdd = files.slice(0, remaining)
+
+  toAdd.forEach(file => {
+    const reader = new FileReader()
+    reader.onload = e => {
+      state.images.push(e.target.result)
+      renderImageGrid()
+    }
+    reader.readAsDataURL(file)
+  })
+  event.target.value = ''
+}
+
+function renderImageGrid() {
+  const grid = document.getElementById('imageGrid')
+  const thumbs = state.images.map((img, i) =>
+    `<div class="image-thumb">
+      <img src="${img}" onclick="previewBase64(${i})">
+      <div class="image-thumb-del" onclick="removeImage(${i})">✕</div>
+    </div>`
+  ).join('')
+
+  const addBtn = state.images.length < 9
+    ? `<div class="image-add-btn" onclick="document.getElementById('fileInput').click()"><span>+</span><span>添加图片</span></div>`
+    : ''
+
+  grid.innerHTML = thumbs + addBtn
+}
+
+function removeImage(index) {
+  state.images.splice(index, 1)
+  renderImageGrid()
+}
+
+function submitRecord() {
+  const reason = document.getElementById('inputReason').value.trim()
+  const location = document.getElementById('inputLocation').value.trim()
+  const dinnerDate = document.getElementById('inputDate').value
+
+  if (!reason) { showToast('请填写聚餐事由'); return }
+  if (!location) { showToast('请填写聚餐地点'); return }
+  if (!dinnerDate) { showToast('请选择聚餐日期'); return }
+  if (state.participants.length === 0) { showToast('请添加至少一名参与人'); return }
+  if (state.payers.length === 0) { showToast('请添加至少一名结账人'); return }
+
+  const total = state.payers.reduce((s, p) => s + p.amount, 0)
+
+  const record = {
+    id: 'rec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+    reason,
+    location,
+    dinnerDate,
+    totalAmount: parseFloat(total.toFixed(2)),
+    participants: [...state.participants],
+    payers: [...state.payers],
+    images: [...state.images],
+    submitterId: state.myId,
+    submitterName: state.myName,
+    createdAt: getNowStr(),
+    editHistory: []
+  }
+
+  state.records.unshift(record)
+  saveRecords()
+
+  // 重置表单
+  document.getElementById('inputReason').value = ''
+  document.getElementById('inputLocation').value = ''
+  document.getElementById('inputDate').value = getTodayStr()
+  state.participants = []
+  state.payers = []
+  state.images = []
+  renderParticipantTags()
+  renderPayerList()
+  renderImageGrid()
+
+  showToast('✅ 记录成功！')
+  setTimeout(() => switchTab('list'), 1200)
+}
+
+// ============================================================
+// 管理员相关
+// ============================================================
+function updateAdminPageUI() {
+  const card = document.getElementById('adminStatusCard')
+  const icon = document.getElementById('adminCardIcon')
+  const title = document.getElementById('adminCardTitle')
+  const desc = document.getElementById('adminCardDesc')
+  const loginSection = document.getElementById('adminLoginSection')
+  const recordsSection = document.getElementById('adminRecordsSection')
+
+  if (state.isAdmin) {
+    card.className = 'admin-status-card is-admin'
+    icon.textContent = '🛡️'
+    title.textContent = '管理员身份'
+    desc.textContent = '您拥有删除虚假记录的权限'
+    loginSection.style.display = 'none'
+    recordsSection.style.display = 'block'
+  } else {
+    card.className = 'admin-status-card not-admin'
+    icon.textContent = '👤'
+    title.textContent = '普通用户'
+    desc.textContent = '所有用户都可以编辑记录，管理员可删除虚假记录'
+    loginSection.style.display = 'block'
+    recordsSection.style.display = 'none'
+  }
+}
+
+function renderAdminList() {
+  if (!state.isAdmin) return
+  const records = [...state.records].sort((a, b) => b.dinnerDate.localeCompare(a.dinnerDate))
+  document.getElementById('adminRecordCount').textContent = `共 ${records.length} 条`
+
+  const list = document.getElementById('adminRecordList')
+  if (records.length === 0) {
+    list.innerHTML = '<div class="empty"><span class="empty-emoji">📭</span><span class="empty-text">暂无记录</span></div>'
+    return
+  }
+
+  list.innerHTML = records.map(r => {
+    let editInfo = ''
+    if (r.editHistory && r.editHistory.length > 0) {
+      const lastEdit = r.editHistory[0]
+      editInfo = `<div class="admin-record-meta">已修改 ${r.editHistory.length} 次，最后由 ${escHtml(lastEdit.editorName || '未知')} 修改</div>`
+    }
+    return `<div class="admin-record-item">
+      <div class="admin-record-info">
+        <div class="admin-record-reason">${escHtml(r.reason)}</div>
+        <div class="admin-record-meta">${r.dinnerDate} · ${escHtml(r.location)} · ¥${(r.totalAmount||0).toFixed(2)}</div>
+        <div class="admin-record-meta">创建人：${escHtml(r.submitterName || '匿名')}</div>
+        ${editInfo}
+      </div>
+      <button class="admin-del-record-btn" onclick="confirmDeleteRecord('${r.id}','${escHtml(r.reason)}')">删除</button>
+    </div>`
+  }).join('')
+}
+
+function toggleAdminMode() {
+  if (!state.isAdmin) {
+    showToast('请先在管理页面验证管理员身份')
+    return
+  }
+  state.adminMode = !state.adminMode
+  showToast(state.adminMode ? '🛡️ 管理模式已开启' : '管理模式已关闭')
+  renderList()
+}
+
+function showAdminLogin() {
+  document.getElementById('adminLoginModal').classList.add('show')
+  document.getElementById('adminPwdInput').value = ''
+  setTimeout(() => document.getElementById('adminPwdInput').focus(), 100)
+}
+
+function closeAdminLogin() {
+  document.getElementById('adminLoginModal').classList.remove('show')
+}
+
+function verifyAdmin() {
+  const pwd = document.getElementById('adminPwdInput').value
+  if (pwd === ADMIN_PASSWORD) {
+    state.isAdmin = true
+    localStorage.setItem(ADMIN_KEY, 'true')
+    const ids = getAdminIds()
+    if (!ids.includes(state.myId)) {
+      ids.push(state.myId)
+      localStorage.setItem(ADMIN_IDS_KEY, JSON.stringify(ids))
+    }
+    closeAdminLogin()
+    updateAdminPageUI()
+    renderAdminList()
+    showToast('🎉 管理员验证成功！')
+  } else {
+    showToast('❌ 密码错误')
+  }
+}
+
+function confirmDeleteRecord(id, reason) {
+  state.deleteTargetId = id
+  document.getElementById('deleteModalContent').textContent = `确定删除「${reason}」这条聚餐记录？此操作不可撤销。`
+  document.getElementById('deleteModal').classList.add('show')
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('show')
+  state.deleteTargetId = null
+}
+
+function confirmDelete() {
+  if (!state.deleteTargetId) return
+  state.records = state.records.filter(r => r.id !== state.deleteTargetId)
+  saveRecords()
+  closeDeleteModal()
+  renderList()
+  renderAdminList()
+  showToast('已删除')
+}
+
+function copyMyId() {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(state.myId).then(() => showToast('✅ 已复制 ID'))
+  } else {
+    const el = document.createElement('textarea')
+    el.value = state.myId
+    document.body.appendChild(el)
+    el.select()
+    document.execCommand('copy')
+    document.body.removeChild(el)
+    showToast('✅ 已复制 ID')
+  }
+}
+
+// ============================================================
+// Toast
+// ============================================================
+let toastTimer = null
+function showToast(msg) {
+  const toast = document.getElementById('toast')
+  toast.textContent = msg
+  toast.classList.add('show')
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2000)
+}
+
+// ============================================================
+// 启动
+// ============================================================
+window.addEventListener('DOMContentLoaded', init)
+</script>
+</body>
+</html>
