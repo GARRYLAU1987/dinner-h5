@@ -2069,6 +2069,31 @@ function openDetail(id) {
   const historySection = renderEditHistory(record)
   const auditSection = renderRecordAuditLog(record.id)
 
+  // 权限：只有管理员或创建者自己才能编辑
+  const canEdit = state.isAdmin || record.submitterId === state.myId
+
+  // 底部创建者信息：如果是自己创建的，显示当前名字；否则显示成员列表中的名字
+  const creatorName = record.submitterId === state.myId
+    ? state.myName
+    : getUserDisplayName(record.submitterId)
+  const creatorIdShort = record.submitterId ? record.submitterId.substr(-4) : '----'
+
+  // 管理员修正创建者按钮（当创建者不是当前用户时）
+  const fixCreatorBtn = (state.isAdmin && record.submitterId !== state.myId)
+    ? `<button class="btn-edit-record" onclick="fixRecordCreator('${record.id}')" style="border-color:#27ae60;color:#27ae60;margin-bottom:8px;font-size:13px;padding:10px 0">
+        <span>📝 将创建者修正为「${escHtml(state.myName)}」</span>
+      </button>`
+    : ''
+
+  const editBtn = canEdit
+    ? `<button class="btn-edit-record" onclick="startEditRecord('${record.id}')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M11.5 2.5L13.5 4.5L5 13H3V11L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        编辑此记录
+      </button>`
+    : ''
+
   document.getElementById('detailContent').innerHTML = `
     <div class="detail-header">
       <span class="detail-emoji">🎉</span>
@@ -2076,12 +2101,8 @@ function openDetail(id) {
       <span class="detail-date">${record.dinnerDate}</span>
     </div>
 
-    <button class="btn-edit-record" onclick="startEditRecord('${record.id}')">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M11.5 2.5L13.5 4.5L5 13H3V11L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      编辑此记录
-    </button>
+    ${fixCreatorBtn}
+    ${editBtn}
 
     <div class="detail-card">
       ${record.note ? `<div class="detail-row">
@@ -2121,7 +2142,8 @@ function openDetail(id) {
     ${historySection}
     ${auditSection}
     <div class="detail-sub-text">
-      由 ${escHtml(getUserDisplayName(record.submitterId))} 创建于 ${record.createdAt || record.dinnerDate}
+      由 ${escHtml(creatorName)}（ID:${creatorIdShort}）创建于 ${record.createdAt || record.dinnerDate}
+      ${record.submitterId === state.myId ? '<span style="color:var(--primary)">（我）</span>' : ''}
       ${record.lastEditTime ? '<br>最后由 ' + escHtml(getUserDisplayName(record.lastEditorId)) + ' 修改于 ' + record.lastEditTime : ''}
     </div>
   `
@@ -2215,6 +2237,12 @@ function goBack() {
 function startEditRecord(id) {
   const record = state.records.find(r => r.id === id)
   if (!record) return
+
+  // 权限检查：非管理员只能编辑自己创建的记录
+  if (!state.isAdmin && record.submitterId !== state.myId) {
+    showToast('❌ 您只能编辑自己创建的记录')
+    return
+  }
 
   state.editRecordId = id
   state.editParticipants = [...(record.participants || [])]
@@ -2373,6 +2401,15 @@ function previewUrl(page, index) {
 async function saveEditRecord() {
   if (!state.editRecordId) return
 
+  const record = state.records.find(r => r.id === state.editRecordId)
+  if (!record) return
+
+  // 权限检查：非管理员只能保存自己创建的记录
+  if (!state.isAdmin && record.submitterId !== state.myId) {
+    showToast('❌ 您只能编辑自己创建的记录')
+    return
+  }
+
   // 获取有效的事由值
   const reasonSelect = document.getElementById('editReason')
   const reasonCustom = document.getElementById('editReasonCustom')
@@ -2387,9 +2424,6 @@ async function saveEditRecord() {
   if (!dinnerDate) { showToast('请选择活动日期'); return }
   if (state.editParticipants.length === 0) { showToast('请添加至少一名参与人'); return }
   if (state.editPayers.length === 0) { showToast('请添加至少一名结账人'); return }
-
-  const record = state.records.find(r => r.id === state.editRecordId)
-  if (!record) return
 
   const total = state.editPayers.reduce((s, p) => s + p.amount, 0)
 
@@ -2453,6 +2487,57 @@ async function saveEditRecord() {
   if (ok) {
     showToast('✅ 修改已保存')
     setTimeout(() => openDetail(state.editRecordId), 800)
+  }
+}
+
+// 管理员修正记录创建者（解决历史数据创建者不对的问题）
+async function fixRecordCreator(recordId) {
+  if (!state.isAdmin) {
+    showToast('❌ 仅管理员可操作')
+    return
+  }
+  const record = state.records.find(r => r.id === recordId)
+  if (!record) return
+
+  const oldCreator = getUserDisplayName(record.submitterId)
+  const newCreator = state.myName
+
+  if (!confirm(`确认将这条记录的创建者从「${oldCreator}」修正为「${newCreator}」？\n\n修正后会同时修正：\n- 创建者名称\n- 创建者 ID`)) {
+    return
+  }
+
+  // 记录修正历史
+  if (!record.editHistory) record.editHistory = []
+  record.editHistory.unshift({
+    editorId: state.myId,
+    editorName: state.myName,
+    editTime: getNowStr(),
+    changes: `创建者修正：「${oldCreator}」→「${newCreator}」`
+  })
+  if (record.editHistory.length > 10) {
+    record.editHistory = record.editHistory.slice(0, 10)
+  }
+
+  // 修正创建者信息
+  record.submitterId = state.myId
+  record.submitterName = state.myName
+
+  // 记录审计日志
+  state.auditLog.unshift({
+    action: 'edit',
+    targetId: record.id,
+    targetReason: record.reason,
+    adminId: state.myId,
+    adminName: state.myName,
+    time: getNowStr(),
+    changes: `创建者修正：「${oldCreator}」→「${newCreator}」`
+  })
+  if (state.auditLog.length > 50) state.auditLog = state.auditLog.slice(0, 50)
+
+  const ok = await saveRecords()
+  if (ok) {
+    showToast('✅ 创建者已修正')
+    openDetail(recordId)
   }
 }
 
@@ -3009,6 +3094,13 @@ function closeDeleteModal() {
 
 async function confirmDelete() {
   if (!state.deleteTargetId) return
+
+  // 权限检查：只有管理员才能删除记录
+  if (!state.isAdmin) {
+    showToast('❌ 仅管理员可删除记录')
+    closeDeleteModal()
+    return
+  }
 
   const target = state.deleteTargetRecord
   const targetReason = target ? target.reason : '未知'
