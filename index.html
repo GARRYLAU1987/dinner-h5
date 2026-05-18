@@ -180,6 +180,17 @@
     box-shadow: 0 6px 16px rgba(229,137,84,0.3);
   }
 
+  .pending-admin-link {
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--primary);
+    cursor: pointer;
+    text-decoration: underline;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  }
+  .pending-admin-link:active { opacity: 1; }
+
   /* ===== 统计头部 ===== */
   .stats-header {
     background: linear-gradient(135deg, var(--primary), var(--primary-light));
@@ -999,6 +1010,7 @@
     <div class="pending-id-val" id="pendingIdDisplay">--</div>
   </div>
   <button class="pending-btn" onclick="refreshPendingStatus()">&#128260; 刷新状态</button>
+  <div class="pending-admin-link" onclick="showAdminLogin()">&#128272; 我是管理员，直接登录</div>
 </div>
 
 <!-- 顶部导航 -->
