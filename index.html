@@ -101,6 +101,85 @@
 
   .page.active { display: block; }
 
+  /* ===== 等待审核页面 ===== */
+  .pending-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 40px 24px;
+    text-align: center;
+  }
+
+  .pending-overlay.show { display: flex; }
+
+  .pending-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #f0a070, #e58954);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(229,137,84,0.3);
+  }
+
+  .pending-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 12px;
+  }
+
+  .pending-desc {
+    font-size: 14px;
+    color: #999;
+    line-height: 1.8;
+    margin-bottom: 32px;
+  }
+
+  .pending-id-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .pending-id-label {
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 6px;
+  }
+
+  .pending-id-val {
+    font-size: 13px;
+    color: #555;
+    word-break: break-all;
+    font-family: monospace;
+  }
+
+  .pending-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: #fff;
+    border: none;
+    border-radius: 28px;
+    padding: 14px 36px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 6px 16px rgba(229,137,84,0.3);
+  }
+
   /* ===== 统计头部 ===== */
   .stats-header {
     background: linear-gradient(135deg, var(--primary), var(--primary-light));
@@ -446,6 +525,54 @@
     padding: 8px 10px;
   }
 
+  /* 审计日志样式 */
+  .audit-card {
+    background: #fff5f5;
+    border: 1px solid #ffcccc;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .audit-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #c0392b;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .audit-item {
+    background: #fff;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid #e74c3c;
+  }
+
+  .audit-item:last-child { margin-bottom: 0; }
+
+  .audit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .audit-admin { font-size: 13px; font-weight: 600; color: #e74c3c; }
+  .audit-time { font-size: 11px; color: #999; }
+
+  .audit-action {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.6;
+    background: #f9f9f9;
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+
   /* ===== 管理页 ===== */
   .admin-status-card {
     border-radius: 16px;
@@ -491,6 +618,127 @@
   .copy-icon { font-size: 16px; flex-shrink: 0; color: var(--primary); }
   .my-id-tip { font-size: 11px; color: #ccc; }
 
+  .admin-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin: 20px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .admin-section-title:first-of-type { margin-top: 0; }
+
+  /* 待审核成员 */
+  .pending-member-item {
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .pending-member-id {
+    flex: 1;
+    font-size: 13px;
+    color: #555;
+    word-break: break-all;
+    font-family: monospace;
+  }
+
+  .pending-member-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .btn-approve {
+    background: var(--success);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .btn-reject {
+    background: #f5f5f5;
+    color: #999;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* 成员列表 */
+  .member-item {
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .member-name-display {
+    flex: 1;
+    font-size: 14px;
+    color: #333;
+  }
+
+  .member-id-small {
+    font-size: 11px;
+    color: #aaa;
+    font-family: monospace;
+  }
+
+  .member-name-input {
+    flex: 1;
+    background: #f8f8f8;
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+  }
+
+  .member-name-input:focus { border-color: var(--primary); background: #fff; }
+
+  .btn-save-name {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    flex-shrink: 0;
+  }
+
+  .btn-edit-name {
+    background: #f5f5f5;
+    color: var(--primary);
+    border: none;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    flex-shrink: 0;
+  }
+
   .admin-records-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   .admin-records-title { font-size: 15px; font-weight: 600; color: #333; }
   .admin-records-count { font-size: 12px; color: #999; }
@@ -520,6 +768,19 @@
     cursor: pointer;
     flex-shrink: 0;
     font-family: inherit;
+  }
+
+  .admin-edit-record-btn {
+    background: #fff8f0;
+    color: var(--primary);
+    border: 1px solid var(--primary-light);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: inherit;
+    margin-right: 6px;
   }
 
   /* ===== 模态框 ===== */
@@ -705,9 +966,40 @@
     align-items: center;
     gap: 8px;
   }
+
+  .name-display {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    color: #333;
+  }
+
+  .name-badge {
+    font-size: 11px;
+    background: var(--primary);
+    color: #fff;
+    padding: 1px 6px;
+    border-radius: 8px;
+  }
 </style>
 </head>
 <body>
+
+<!-- 等待审核覆盖层 -->
+<div class="pending-overlay" id="pendingOverlay">
+  <div class="pending-icon">&#128274;</div>
+  <div class="pending-title">等待管理员审核</div>
+  <div class="pending-desc">
+    您已成功扫码，但需要管理员审核通过后才能使用。<br>
+    请将下方用户 ID 发送给管理员申请加入。
+  </div>
+  <div class="pending-id-box">
+    <div class="pending-id-label">我的用户 ID</div>
+    <div class="pending-id-val" id="pendingIdDisplay">--</div>
+  </div>
+  <button class="pending-btn" onclick="refreshPendingStatus()">&#128260; 刷新状态</button>
+</div>
 
 <!-- 顶部导航 -->
 <div class="nav">
@@ -864,7 +1156,25 @@
       <span class="my-id-val" id="myIdDisplay">&#29983;&#25104;&#20013;...</span>
       <span class="copy-icon">&#128203;</span>
     </div>
-    <div class="my-id-tip">&#23558;&#27492; ID &#25552;&#20379;&#32473;&#31649;&#29702;&#21592;&#65292;&#21363;&#21487;&#33719;&#24471;&#31649;&#29702;&#26435;&#38480;</div>
+    <div class="my-id-tip" id="myNameDisplay">&#29992;&#25143;&#21517;&#65306;--</div>
+  </div>
+
+  <!-- 管理员专属：待审核成员 -->
+  <div id="pendingMembersSection" style="display:none">
+    <div class="admin-section-title">&#128276; &#24453;&#23457;&#26680;&#25104;&#21592;</div>
+    <div id="pendingMembersList"></div>
+  </div>
+
+  <!-- 管理员专属：成员管理 -->
+  <div id="membersSection" style="display:none">
+    <div class="admin-section-title">&#128101; &#25104;&#21592;&#31649;&#29702;</div>
+    <div id="membersList"></div>
+  </div>
+
+  <!-- 管理员专属：审计日志 -->
+  <div id="auditLogSection" style="display:none">
+    <div class="admin-section-title">&#128220; &#25805;&#20316;&#26085;&#24535;</div>
+    <div id="auditLogList"></div>
   </div>
 
   <div id="adminRecordsSection" style="display:none">
@@ -951,9 +1261,8 @@
 
 <script>
 // ============================================================
-// GitHub API &#37197;&#32622;
+// GitHub API 配置
 // ============================================================
-// Token 分片存储，避免 GitHub secret detection
 const _t = ['g','h','p','_','3','b','M','r','k','d','b','1','N','V','B','Q','7','L','G','j','e','I','I','Y','Z','3','k','H','8','2','i','D','m','M','1','g','B','q','P','X']
 const GH_TOKEN = _t.join('')
 const GH_OWNER = 'GARRYLAU1987'
@@ -964,22 +1273,27 @@ const GH_API = 'https://api.github.com'
 // ============================================================
 // localStorage keys
 // ============================================================
-const ADMIN_KEY = 'dinner_admin_v3'
+const ADMIN_KEY = 'dinner_admin_v4'
 const USER_ID_KEY = 'dinner_user_id'
 const USER_NAME_KEY = 'dinner_user_name'
 const ADMIN_IDS_KEY = 'dinner_admin_ids'
 const ADMIN_PASSWORD = 'admin123'
 
 // ============================================================
-// &#29366;&#24577;
+// 状态
 // ============================================================
 let state = {
   records: [],
+  members: {},        // { userId: { name, approved, approvedBy, approvedAt } }
+  pendingMembers: [], // [userId, ...]
+  auditLog: [],       // [{ action, targetId, targetReason, adminId, adminName, time, changes }]
   isAdmin: false,
+  isApproved: false,
   myId: '',
   myName: '',
   currentDetailId: null,
   deleteTargetId: null,
+  deleteTargetRecord: null,
   participants: [],
   payers: [],
   images: [],
@@ -988,12 +1302,12 @@ let state = {
   editPayers: [],
   editImages: [],
   adminMode: false,
-  // GitHub &#25991;&#20214; SHA&#65288;&#29992;&#20110;&#26356;&#26032;&#65289;
-  dataSha: null
+  dataSha: null,
+  uploadingImages: 0
 }
 
 // ============================================================
-//  图片上传：GitHub dinner-images 仓库（外迁 Base64）
+// 图片上传：GitHub dinner-images 仓库
 // ============================================================
 async function uploadImageToGitHub(file) {
   return new Promise((resolve, reject) => {
@@ -1027,7 +1341,7 @@ async function uploadImageToGitHub(file) {
           resolve(rawUrl)
         } else {
           console.warn('GitHub 上传失败:', json)
-          resolve(base64Full)  // 降级：保留 base64
+          resolve(base64Full)
         }
       } catch (err) {
         console.warn('图片上传失败，降级保留 base64:', err)
@@ -1040,7 +1354,7 @@ async function uploadImageToGitHub(file) {
 }
 
 // ============================================================
-// GitHub API &#23553;&#35013;
+// GitHub API 封装
 // ============================================================
 async function ghGet(path) {
   const res = await fetch(`${GH_API}${path}`, {
@@ -1074,7 +1388,43 @@ async function ghPut(path, body) {
 }
 
 // ============================================================
-// &#21152;&#36733;&#25968;&#25454;&#65288;&#20174;GitHub&#65289;
+// 数据迁移：兼容旧格式
+// ============================================================
+function migrateData(content) {
+  if (!content) content = {}
+  if (!content.records) content.records = []
+  if (!content.members) content.members = {}
+  if (!content.pendingMembers) content.pendingMembers = []
+  if (!content.auditLog) content.auditLog = []
+
+  // 将现有记录的创建者自动转为已审核成员
+  for (const rec of content.records) {
+    if (rec.submitterId && !content.members[rec.submitterId]) {
+      content.members[rec.submitterId] = {
+        name: rec.submitterName || '用户_' + rec.submitterId.substr(-4),
+        approved: true,
+        approvedBy: 'system',
+        approvedAt: rec.createdAt || new Date().toISOString()
+      }
+    }
+    // 同时迁移 editHistory 中的编辑者
+    for (const h of (rec.editHistory || [])) {
+      if (h.editorId && !content.members[h.editorId]) {
+        content.members[h.editorId] = {
+          name: h.editorName || '用户_' + h.editorId.substr(-4),
+          approved: true,
+          approvedBy: 'system',
+          approvedAt: rec.createdAt || new Date().toISOString()
+        }
+      }
+    }
+  }
+
+  return content
+}
+
+// ============================================================
+// 加载数据（从GitHub）
 // ============================================================
 async function loadRecords() {
   showLoading('正在同步云端数据...')
@@ -1084,17 +1434,14 @@ async function loadRecords() {
 
     let content
     if (file.content && file.content.length > 10) {
-      // 小文件：Base64 解码后还原 UTF-8（兼容旧编码 unescape(encodeURIComponent)）
       const latin1Text = atob(file.content)
       try {
         const jsonText = decodeURIComponent(escape(latin1Text))
         content = JSON.parse(jsonText)
       } catch (e) {
-        // 降级：直接解析（兼容新编码 TextEncoder）
         content = JSON.parse(latin1Text)
       }
     } else if (file.download_url) {
-      // 大文件（>1MB）：下载原始字节，按 Latin-1 解码后还原 UTF-8
       const res = await fetch(file.download_url)
       const bytes = new Uint8Array(await res.arrayBuffer())
       const latin1Text = new TextDecoder('iso-8859-1').decode(bytes)
@@ -1108,15 +1455,31 @@ async function loadRecords() {
       throw new Error('无法获取文件内容')
     }
 
+    content = migrateData(content)
     state.records = content.records || []
+    state.members = content.members || {}
+    state.pendingMembers = content.pendingMembers || []
+    state.auditLog = content.auditLog || []
+
+    // 检查当前用户审核状态
+    checkApprovalStatus()
+
     renderList()
-    if (state.isAdmin) renderAdminList()
+    if (state.isAdmin) {
+      renderAdminList()
+      renderPendingMembers()
+      renderMembersList()
+      renderAuditLog()
+    }
   } catch (err) {
     if (err.message.includes('404')) {
-      // &#25991;&#20214;&#19981;&#23384;&#22312;&#65292;&#21021;&#22987;&#21270;&#31354;&#25968;&#25454;
       state.records = []
+      state.members = {}
+      state.pendingMembers = []
+      state.auditLog = []
       state.dataSha = null
       await initDataFile()
+      checkApprovalStatus()
       renderList()
     } else {
       showToast('同步失败：' + err.message)
@@ -1127,10 +1490,93 @@ async function loadRecords() {
   }
 }
 
-// &#21021;&#22987;&#21270;&#25968;&#25454;&#25991;&#20214;
+// 检查当前用户是否已审核
+function checkApprovalStatus() {
+  if (state.isAdmin) {
+    state.isApproved = true
+    return
+  }
+
+  const member = state.members[state.myId]
+  if (member && member.approved) {
+    state.isApproved = true
+    state.myName = member.name
+    document.getElementById('myNameDisplay').textContent = '用户名：' + member.name
+  } else if (state.pendingMembers.includes(state.myId)) {
+    state.isApproved = false
+    showPendingOverlay()
+  } else {
+    // 新用户：加入待审核列表
+    state.isApproved = false
+    state.pendingMembers.push(state.myId)
+    // 保存到云端
+    saveDataSilent().then(() => {
+      showPendingOverlay()
+    }).catch(() => {
+      showPendingOverlay()
+    })
+  }
+}
+
+function showPendingOverlay() {
+  document.getElementById('pendingIdDisplay').textContent = state.myId
+  document.getElementById('pendingOverlay').classList.add('show')
+}
+
+function hidePendingOverlay() {
+  document.getElementById('pendingOverlay').classList.remove('show')
+}
+
+async function refreshPendingStatus() {
+  showLoading('刷新状态中...')
+  await loadRecords()
+  hideLoading()
+  if (state.isApproved) {
+    hidePendingOverlay()
+    showToast('审核通过！欢迎使用')
+  } else {
+    showToast('尚未审核通过，请耐心等待')
+  }
+}
+
+// 静默保存（不显示loading）
+async function saveDataSilent() {
+  try {
+    let sha = state.dataSha
+    try {
+      const file = await ghGet(`/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_PATH}`)
+      sha = file.sha
+    } catch (e) {}
+
+    const jsonText = JSON.stringify({
+      records: state.records,
+      members: state.members,
+      pendingMembers: state.pendingMembers,
+      auditLog: state.auditLog,
+      updatedAt: new Date().toISOString()
+    })
+    const utf8Bytes = new TextEncoder().encode(jsonText)
+    let binary = ''
+    utf8Bytes.forEach(b => binary += String.fromCharCode(b))
+    const payload = {
+      message: `更新成员数据 ${getNowStr()}`,
+      content: btoa(binary),
+    }
+    if (sha) payload.sha = sha
+
+    const result = await ghPut(`/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_PATH}`, payload)
+    state.dataSha = result.content.sha
+    return true
+  } catch (err) {
+    console.error('静默保存失败', err)
+    return false
+  }
+}
+
+// 初始化数据文件
 async function initDataFile() {
   try {
-    const initJson = JSON.stringify({ records: [], updatedAt: new Date().toISOString() })
+    const initJson = JSON.stringify({ records: [], members: {}, pendingMembers: [], auditLog: [], updatedAt: new Date().toISOString() })
     const initBytes = new TextEncoder().encode(initJson)
     let initBinary = ''
     initBytes.forEach(b => initBinary += String.fromCharCode(b))
@@ -1143,24 +1589,23 @@ async function initDataFile() {
   }
 }
 
-// &#20445;&#23384;&#25968;&#25454;&#65288;&#21040;GitHub&#65289;
+// 保存数据（到GitHub）
 async function saveRecords() {
   showLoading('正在保存到云端...')
   try {
-    // &#20808;&#33719;&#21462;&#26368;&#26032;SHA&#65288;&#38450;&#27490;&#20914;&#31361;&#65289;
     let sha = state.dataSha
     try {
       const file = await ghGet(`/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_DATA_PATH}`)
       sha = file.sha
-    } catch (e) {
-      // &#25991;&#20214;&#19981;&#23384;&#22312;&#65292;&#19981;&#38656;&#35201;SHA
-    }
+    } catch (e) {}
 
     const jsonText = JSON.stringify({
       records: state.records,
+      members: state.members,
+      pendingMembers: state.pendingMembers,
+      auditLog: state.auditLog,
       updatedAt: new Date().toISOString()
     })
-    // UTF-8 → Base64（替代已废弃的 unescape）
     const utf8Bytes = new TextEncoder().encode(jsonText)
     let binary = ''
     utf8Bytes.forEach(b => binary += String.fromCharCode(b))
@@ -1183,7 +1628,7 @@ async function saveRecords() {
 }
 
 // ============================================================
-// &#21021;&#22987;&#21270;
+// 初始化
 // ============================================================
 function init() {
   let myId = localStorage.getItem(USER_ID_KEY)
@@ -1194,18 +1639,21 @@ function init() {
   state.myId = myId
   document.getElementById('myIdDisplay').textContent = myId
 
+  // 成员名字由管理员设定，不再自动从 localStorage 读取
+  // 但从 localStorage 读取作为 fallback
   let myName = localStorage.getItem(USER_NAME_KEY)
   if (!myName) {
     myName = '用户_' + Math.random().toString(36).substr(2, 4)
     localStorage.setItem(USER_NAME_KEY, myName)
   }
   state.myName = myName
+  document.getElementById('myNameDisplay').textContent = '用户名：' + myName
 
   const adminIds = getAdminIds()
   state.isAdmin = adminIds.includes(myId) || localStorage.getItem(ADMIN_KEY) === 'true'
   updateAdminPageUI()
 
-  // &#24322;&#27493;&#21152;&#36733;&#25968;&#25454;
+  // 异步加载数据
   loadRecords()
 
   document.getElementById('inputDate').value = getTodayStr()
@@ -1235,8 +1683,16 @@ function getNowStr() {
   return new Date().toLocaleString('zh-CN')
 }
 
+// 获取用户显示名称
+function getUserDisplayName(userId) {
+  if (state.members[userId]) {
+    return state.members[userId].name
+  }
+  return '用户_' + userId.substr(-4)
+}
+
 // ============================================================
-// &#28210;&#26579;&#21015;&#34920;
+// 渲染列表
 // ============================================================
 function renderList() {
   const list = document.getElementById('recordList')
@@ -1263,11 +1719,12 @@ function renderList() {
 
     let editBadge = ''
     if (r.lastEditTime) {
+      const editorName = getUserDisplayName(r.lastEditorId)
       editBadge = `<div class="edit-badge">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
           <path d="M11.5 2.5L13.5 4.5L5 13H3V11L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        ${escHtml(r.lastEditorName || '未知')} ${r.lastEditTime}
+        ${escHtml(editorName)} ${r.lastEditTime}
       </div>`
     }
 
@@ -1330,6 +1787,7 @@ function openDetail(id) {
       </div>` : ''
 
   const historySection = renderEditHistory(record)
+  const auditSection = renderRecordAuditLog(record.id)
 
   document.getElementById('detailContent').innerHTML = `
     <div class="detail-header">
@@ -1374,9 +1832,10 @@ function openDetail(id) {
     </div>
     ${imgSection}
     ${historySection}
+    ${auditSection}
     <div class="detail-sub-text">
-      由 ${escHtml(record.submitterName || '匿名')} 创建于 ${record.createdAt || record.dinnerDate}
-      ${record.lastEditTime ? '<br>最后由 ' + escHtml(record.lastEditorName || '未知') + ' 修改于 ' + record.lastEditTime : ''}
+      由 ${escHtml(getUserDisplayName(record.submitterId))} 创建于 ${record.createdAt || record.dinnerDate}
+      ${record.lastEditTime ? '<br>最后由 ' + escHtml(getUserDisplayName(record.lastEditorId)) + ' 修改于 ' + record.lastEditTime : ''}
     </div>
   `
 
@@ -1388,15 +1847,17 @@ function openDetail(id) {
 function renderEditHistory(record) {
   if (!record.editHistory || record.editHistory.length === 0) return ''
 
-  const historyItems = record.editHistory.map(h => `
+  const historyItems = record.editHistory.map(h => {
+    const editorName = getUserDisplayName(h.editorId)
+    return `
     <div class="edit-history-item">
       <div class="edit-history-header">
-        <span class="edit-history-editor">✏️ ${escHtml(h.editorName || '未知')}</span>
+        <span class="edit-history-editor">✏️ ${escHtml(editorName)}</span>
         <span class="edit-history-time">${h.editTime}</span>
       </div>
       <div class="edit-history-changes">${escHtml(h.changes || '内容已修改')}</div>
     </div>
-  `).join('')
+  `}).join('')
 
   return `
     <div class="edit-history-card">
@@ -1408,6 +1869,40 @@ function renderEditHistory(record) {
         修改历史（共 ${record.editHistory.length} 次）
       </div>
       ${historyItems}
+    </div>
+  `
+}
+
+// 渲染该记录相关的审计日志
+function renderRecordAuditLog(recordId) {
+  const logs = (state.auditLog || []).filter(l => l.targetId === recordId)
+  if (logs.length === 0) return ''
+
+  const items = logs.map(l => {
+    const adminName = getUserDisplayName(l.adminId)
+    let actionText = ''
+    if (l.action === 'delete') {
+      actionText = `🗑️ 删除了此记录（原事由：${l.targetReason || '未知'}）`
+    } else if (l.action === 'edit') {
+      actionText = `✏️ 编辑了此记录：${l.changes || '内容已修改'}`
+    }
+    return `
+      <div class="audit-item">
+        <div class="audit-header">
+          <span class="audit-admin">🛡️ ${escHtml(adminName)}</span>
+          <span class="audit-time">${l.time}</span>
+        </div>
+        <div class="audit-action">${escHtml(actionText)}</div>
+      </div>
+    `
+  }).join('')
+
+  return `
+    <div class="audit-card">
+      <div class="audit-title">
+        🛡️ 管理员操作记录
+      </div>
+      ${items}
     </div>
   `
 }
@@ -1548,7 +2043,7 @@ function renderEditImageGrid() {
   const grid = document.getElementById('editImageGrid')
   const thumbs = state.editImages.map((img, i) =>
     `<div class="image-thumb">
-      <img src="${img}" onclick="previewBase64(${i})">
+      <img src="${img}" onclick="previewUrl('edit',${i})">
       <div class="image-thumb-del" onclick="editRemoveImage(${i})">✕</div>
     </div>`
   ).join('')
@@ -1565,7 +2060,6 @@ function editRemoveImage(index) {
   renderEditImageGrid()
 }
 
-// 统一图片预览（支持 base64 旧图片 和 URL 新图片）
 function previewUrl(page, index) {
   const imgs = page === 'new' ? state.images : state.editImages
   document.getElementById('previewImg').src = imgs[index]
@@ -1629,6 +2123,20 @@ async function saveEditRecord() {
   record.lastEditorName = state.myName
   record.lastEditTime = getNowStr()
 
+  // 如果是管理员编辑，记录审计日志
+  if (state.isAdmin && record.submitterId !== state.myId) {
+    state.auditLog.unshift({
+      action: 'edit',
+      targetId: record.id,
+      targetReason: record.reason,
+      adminId: state.myId,
+      adminName: state.myName,
+      time: getNowStr(),
+      changes: changeText
+    })
+    if (state.auditLog.length > 50) state.auditLog = state.auditLog.slice(0, 50)
+  }
+
   const ok = await saveRecords()
   if (ok) {
     showToast('✅ 修改已保存')
@@ -1653,7 +2161,13 @@ function switchTab(tab) {
   }[tab] || '活动记账'
 
   if (tab === 'list') renderList()
-  if (tab === 'admin') renderAdminList()
+  if (tab === 'admin') {
+    updateAdminPageUI()
+    renderAdminList()
+    renderPendingMembers()
+    renderMembersList()
+    renderAuditLog()
+  }
 }
 
 function switchToPage(page) {
@@ -1734,7 +2248,6 @@ async function handleImages(event) {
 
   if (toAdd.length === 0) return
 
-  // 显示上传状态
   const grid = document.getElementById('imageGrid')
   const uploadIndicator = document.createElement('div')
   uploadIndicator.id = 'uploadIndicator'
@@ -1753,7 +2266,6 @@ async function handleImages(event) {
     }
   }
 
-  // 移除上传提示
   const indicator = document.getElementById('uploadIndicator')
   if (indicator) indicator.remove()
 
@@ -1765,7 +2277,7 @@ function renderImageGrid() {
   const grid = document.getElementById('imageGrid')
   const thumbs = state.images.map((img, i) =>
     `<div class="image-thumb">
-      <img src="${img}" onclick="previewBase64(${i})">
+      <img src="${img}" onclick="previewUrl('new',${i})">
       <div class="image-thumb-del" onclick="removeImage(${i})">✕</div>
     </div>`
   ).join('')
@@ -1819,13 +2331,29 @@ async function submitRecord() {
     state.dataSha = file.sha
     let content
     if (file.content && file.content.length > 10) {
-      content = JSON.parse(atob(file.content))
+      const latin1Text = atob(file.content)
+      try {
+        content = JSON.parse(decodeURIComponent(escape(latin1Text)))
+      } catch (e) {
+        content = JSON.parse(latin1Text)
+      }
     } else if (file.download_url) {
       const res = await fetch(file.download_url)
-      const text = await res.text()
-      content = JSON.parse(text)
+      const bytes = new Uint8Array(await res.arrayBuffer())
+      const latin1Text = new TextDecoder('iso-8859-1').decode(bytes)
+      try {
+        content = JSON.parse(decodeURIComponent(escape(latin1Text)))
+      } catch (e) {
+        content = JSON.parse(latin1Text)
+      }
     }
-    if (content) state.records = content.records || []
+    if (content) {
+      content = migrateData(content)
+      state.records = content.records || []
+      state.members = content.members || {}
+      state.pendingMembers = content.pendingMembers || []
+      state.auditLog = content.auditLog || []
+    }
   } catch (e) {
     // 忽略错误，使用内存中的数据
   }
@@ -1834,10 +2362,8 @@ async function submitRecord() {
 
   const ok = await saveRecords()
   if (ok) {
-    // 显示成功弹窗
     showSuccessModal()
 
-    // 重置表单
     document.getElementById('inputReason').value = ''
     document.getElementById('inputLocation').value = ''
     document.getElementById('inputDate').value = getTodayStr()
@@ -1884,22 +2410,169 @@ function updateAdminPageUI() {
   const desc = document.getElementById('adminCardDesc')
   const loginSection = document.getElementById('adminLoginSection')
   const recordsSection = document.getElementById('adminRecordsSection')
+  const pendingSection = document.getElementById('pendingMembersSection')
+  const membersSection = document.getElementById('membersSection')
+  const auditSection = document.getElementById('auditLogSection')
 
   if (state.isAdmin) {
     card.className = 'admin-status-card is-admin'
     icon.textContent = '🛡️'
     title.textContent = '管理员身份'
-    desc.textContent = '您拥有删除虚假记录的权限'
+    desc.textContent = '您拥有审核成员、修改名字、删除记录等权限'
     loginSection.style.display = 'none'
     recordsSection.style.display = 'block'
+    pendingSection.style.display = 'block'
+    membersSection.style.display = 'block'
+    auditSection.style.display = 'block'
   } else {
     card.className = 'admin-status-card not-admin'
     icon.textContent = '👤'
     title.textContent = '普通用户'
-    desc.textContent = '所有用户都可以编辑记录，管理员可删除虚假记录'
+    desc.textContent = '所有已审核用户都可以编辑记录，管理员可删除虚假记录'
     loginSection.style.display = 'block'
     recordsSection.style.display = 'none'
+    pendingSection.style.display = 'none'
+    membersSection.style.display = 'none'
+    auditSection.style.display = 'none'
   }
+}
+
+// 渲染待审核成员
+function renderPendingMembers() {
+  if (!state.isAdmin) return
+  const list = document.getElementById('pendingMembersList')
+  const pending = state.pendingMembers || []
+
+  if (pending.length === 0) {
+    list.innerHTML = '<div class="empty"><span class="empty-emoji">✅</span><span class="empty-text">暂无待审核成员</span></div>'
+    return
+  }
+
+  list.innerHTML = pending.map(userId => {
+    return `<div class="pending-member-item">
+      <span class="pending-member-id">${escHtml(userId)}</span>
+      <div class="pending-member-actions">
+        <button class="btn-approve" onclick="approveMember('${userId}')">通过</button>
+        <button class="btn-reject" onclick="rejectMember('${userId}')">拒绝</button>
+      </div>
+    </div>`
+  }).join('')
+}
+
+// 审核通过
+async function approveMember(userId) {
+  const name = '用户_' + userId.substr(-4)
+  state.members[userId] = {
+    name: name,
+    approved: true,
+    approvedBy: state.myId,
+    approvedAt: new Date().toISOString()
+  }
+  state.pendingMembers = state.pendingMembers.filter(id => id !== userId)
+
+  const ok = await saveRecords()
+  if (ok) {
+    showToast('✅ 已批准 ' + name)
+    renderPendingMembers()
+    renderMembersList()
+  }
+}
+
+// 拒绝审核
+async function rejectMember(userId) {
+  state.pendingMembers = state.pendingMembers.filter(id => id !== userId)
+  const ok = await saveRecords()
+  if (ok) {
+    showToast('已拒绝该成员')
+    renderPendingMembers()
+  }
+}
+
+// 渲染成员列表
+function renderMembersList() {
+  if (!state.isAdmin) return
+  const list = document.getElementById('membersList')
+  const memberIds = Object.keys(state.members || {})
+
+  if (memberIds.length === 0) {
+    list.innerHTML = '<div class="empty"><span class="empty-emoji">👤</span><span class="empty-text">暂无成员</span></div>'
+    return
+  }
+
+  list.innerHTML = memberIds.map(userId => {
+    const m = state.members[userId]
+    const isAdmin = getAdminIds().includes(userId)
+    return `<div class="member-item" id="member-${userId}">
+      <div class="member-name-display">
+        <span id="name-text-${userId}">${escHtml(m.name)}</span>
+        ${isAdmin ? '<span class="name-badge">管理员</span>' : ''}
+        <div class="member-id-small">${escHtml(userId)}</div>
+      </div>
+      <button class="btn-edit-name" id="btn-edit-${userId}" onclick="enableEditName('${userId}')">修改名字</button>
+      <button class="btn-save-name" id="btn-save-${userId}" style="display:none" onclick="saveMemberName('${userId}')">保存</button>
+    </div>`
+  }).join('')
+}
+
+function enableEditName(userId) {
+  const nameText = document.getElementById(`name-text-${userId}`)
+  const currentName = state.members[userId].name
+  nameText.innerHTML = `<input type="text" class="member-name-input" id="name-input-${userId}" value="${escHtml(currentName)}" placeholder="输入名字">`
+  document.getElementById(`btn-edit-${userId}`).style.display = 'none'
+  document.getElementById(`btn-save-${userId}`).style.display = 'block'
+  setTimeout(() => document.getElementById(`name-input-${userId}`).focus(), 50)
+}
+
+async function saveMemberName(userId) {
+  const input = document.getElementById(`name-input-${userId}`)
+  const newName = input.value.trim()
+  if (!newName) {
+    showToast('名字不能为空')
+    return
+  }
+
+  state.members[userId].name = newName
+
+  // 如果是当前用户，更新 localStorage
+  if (userId === state.myId) {
+    state.myName = newName
+    localStorage.setItem(USER_NAME_KEY, newName)
+    document.getElementById('myNameDisplay').textContent = '用户名：' + newName
+  }
+
+  const ok = await saveRecords()
+  if (ok) {
+    showToast('✅ 名字已更新')
+    renderMembersList()
+  }
+}
+
+// 渲染审计日志
+function renderAuditLog() {
+  if (!state.isAdmin) return
+  const list = document.getElementById('auditLogList')
+  const logs = state.auditLog || []
+
+  if (logs.length === 0) {
+    list.innerHTML = '<div class="empty"><span class="empty-emoji">📋</span><span class="empty-text">暂无操作记录</span></div>'
+    return
+  }
+
+  list.innerHTML = logs.map(l => {
+    const adminName = getUserDisplayName(l.adminId)
+    let actionIcon = l.action === 'delete' ? '🗑️' : '✏️'
+    let actionText = l.action === 'delete'
+      ? `删除了记录「${l.targetReason || '未知'}」`
+      : `编辑了记录「${l.targetReason || '未知'}」：${l.changes || ''}`
+
+    return `<div class="audit-item">
+      <div class="audit-header">
+        <span class="audit-admin">${actionIcon} ${escHtml(adminName)}</span>
+        <span class="audit-time">${l.time}</span>
+      </div>
+      <div class="audit-action">${escHtml(actionText)}</div>
+    </div>`
+  }).join('')
 }
 
 function renderAdminList() {
@@ -1917,16 +2590,21 @@ function renderAdminList() {
     let editInfo = ''
     if (r.editHistory && r.editHistory.length > 0) {
       const lastEdit = r.editHistory[0]
-      editInfo = `<div class="admin-record-meta">已修改 ${r.editHistory.length} 次，最后由 ${escHtml(lastEdit.editorName || '未知')} 修改</div>`
+      const editorName = getUserDisplayName(lastEdit.editorId)
+      editInfo = `<div class="admin-record-meta">已修改 ${r.editHistory.length} 次，最后由 ${escHtml(editorName)} 修改</div>`
     }
+    const creatorName = getUserDisplayName(r.submitterId)
     return `<div class="admin-record-item">
       <div class="admin-record-info">
         <div class="admin-record-reason">${escHtml(r.reason)}</div>
         <div class="admin-record-meta">${r.dinnerDate} · ${escHtml(r.location)} · ¥${(r.totalAmount||0).toFixed(2)}</div>
-        <div class="admin-record-meta">创建人：${escHtml(r.submitterName || '匿名')}</div>
+        <div class="admin-record-meta">创建人：${escHtml(creatorName)}</div>
         ${editInfo}
       </div>
-      <button class="admin-del-record-btn" onclick="confirmDeleteRecord('${r.id}','${escHtml(r.reason)}')">删除</button>
+      <div style="display:flex;flex-shrink:0">
+        <button class="admin-edit-record-btn" onclick="startEditRecord('${r.id}')">编辑</button>
+        <button class="admin-del-record-btn" onclick="confirmDeleteRecord('${r.id}','${escHtml(r.reason)}')">删除</button>
+      </div>
     </div>`
   }).join('')
 }
@@ -1961,9 +2639,29 @@ function verifyAdmin() {
       ids.push(state.myId)
       localStorage.setItem(ADMIN_IDS_KEY, JSON.stringify(ids))
     }
+
+    // 自动将当前管理员加入已审核成员
+    if (!state.members[state.myId]) {
+      state.members[state.myId] = {
+        name: state.myName,
+        approved: true,
+        approvedBy: state.myId,
+        approvedAt: new Date().toISOString()
+      }
+    } else {
+      state.members[state.myId].approved = true
+      state.members[state.myId].name = state.myName
+    }
+    state.pendingMembers = state.pendingMembers.filter(id => id !== state.myId)
+    state.isApproved = true
+    hidePendingOverlay()
+
     closeAdminLogin()
     updateAdminPageUI()
     renderAdminList()
+    renderPendingMembers()
+    renderMembersList()
+    renderAuditLog()
     showToast('🎉 管理员验证成功！')
   } else {
     showToast('❌ 密码错误')
@@ -1972,6 +2670,7 @@ function verifyAdmin() {
 
 function confirmDeleteRecord(id, reason) {
   state.deleteTargetId = id
+  state.deleteTargetRecord = state.records.find(r => r.id === id)
   document.getElementById('deleteModalContent').textContent = `确定删除「${reason}」这条活动记录？此操作不可撤销。`
   document.getElementById('deleteModal').classList.add('show')
 }
@@ -1979,10 +2678,27 @@ function confirmDeleteRecord(id, reason) {
 function closeDeleteModal() {
   document.getElementById('deleteModal').classList.remove('show')
   state.deleteTargetId = null
+  state.deleteTargetRecord = null
 }
 
 async function confirmDelete() {
   if (!state.deleteTargetId) return
+
+  const target = state.deleteTargetRecord
+  const targetReason = target ? target.reason : '未知'
+
+  // 记录审计日志
+  state.auditLog.unshift({
+    action: 'delete',
+    targetId: state.deleteTargetId,
+    targetReason: targetReason,
+    adminId: state.myId,
+    adminName: state.myName,
+    time: getNowStr(),
+    changes: '删除了整条记录'
+  })
+  if (state.auditLog.length > 50) state.auditLog = state.auditLog.slice(0, 50)
+
   state.records = state.records.filter(r => r.id !== state.deleteTargetId)
   const ok = await saveRecords()
   if (ok) {
