@@ -1227,17 +1227,18 @@
 <div class="page" id="page-add">
   <div class="form-section">
     <div class="form-group">
-      <div class="form-label required">&#27963;&#21160;&#20107;&#30001;</div>
+      <div class="form-label">&#27963;&#21160;&#22791;&#27880;</div>
+      <input class="form-input" id="inputNote" placeholder="&#36755;&#20837;&#27963;&#21160;&#22791;&#27880;&#65288;&#21487;&#36873;&#65289;" maxlength="100">
+    </div>
+    <div class="form-group">
+      <div class="form-label required">&#27963;&#21160;&#31867;&#21035;</div>
       <select class="form-input" id="inputReason" onchange="handleReasonChange(this)">
-        <option value="">&#35831;&#36873;&#25321;&#20107;&#30001;&#31867;&#22411;</option>
-        <option value="&#20854;&#20182;">&#20854;&#20182;</option>
-        <option value="&#29983;&#26085;&#32858;&#39184;">&#29983;&#26085;&#32858;&#39184;</option>
-        <option value="&#23395;&#24230;&#22242;&#24314;">&#23395;&#24230;&#22242;&#24314;</option>
-        <option value="&#21319;&#32844;&#24198;&#31069;">&#21319;&#32844;&#24198;&#31069;</option>
+        <option value="">&#35831;&#36873;&#25321;&#31867;&#21035;</option>
+        <option value="&#24936;&#24936;&#23476;&#35831;">&#24936;&#24936;&#23476;&#35831;</option>
         <option value="&#33719;&#21033;&#22238;&#39304;">&#33719;&#21033;&#22238;&#39304;</option>
-        <option value="&#24608;&#24681;&#24120;&#22312;">&#24608;&#24681;&#24120;&#22312;</option>
+        <option value="&#20854;&#20182;">&#20854;&#20182;</option>
       </select>
-      <input class="form-input" id="inputReasonCustom" placeholder="&#33258;&#23450;&#20041;&#20107;&#30001;&#65288;&#21487;&#36873;&#65289;" maxlength="50" style="margin-top:8px;display:none">
+      <input class="form-input" id="inputReasonCustom" placeholder="&#33258;&#23450;&#20041;&#31867;&#21035;&#65288;&#21487;&#36873;&#65289;" maxlength="50" style="margin-top:8px;display:none">
     </div>
     <div class="form-group">
       <div class="form-label required">&#27963;&#21160;&#22320;&#28857;</div>
@@ -1298,17 +1299,18 @@
   </div>
   <div class="form-section">
     <div class="form-group">
-      <div class="form-label required">&#27963;&#21160;&#20107;&#30001;</div>
+      <div class="form-label">&#27963;&#21160;&#22791;&#27880;</div>
+      <input class="form-input" id="editNote" placeholder="&#36755;&#20837;&#27963;&#21160;&#22791;&#27880;&#65288;&#21487;&#36873;&#65289;" maxlength="100">
+    </div>
+    <div class="form-group">
+      <div class="form-label required">&#27963;&#21160;&#31867;&#21035;</div>
       <select class="form-input" id="editReason" onchange="handleEditReasonChange(this)">
-        <option value="">&#35831;&#36873;&#25321;&#20107;&#30001;&#31867;&#22411;</option>
-        <option value="&#20854;&#20182;">&#20854;&#20182;</option>
-        <option value="&#29983;&#26085;&#32858;&#39184;">&#29983;&#26085;&#32858;&#39184;</option>
-        <option value="&#23395;&#24230;&#22242;&#24314;">&#23395;&#24230;&#22242;&#24314;</option>
-        <option value="&#21319;&#32844;&#24198;&#31069;">&#21319;&#32844;&#24198;&#31069;</option>
+        <option value="">&#35831;&#36873;&#25321;&#31867;&#21035;</option>
+        <option value="&#24936;&#24936;&#23476;&#35831;">&#24936;&#24936;&#23476;&#35831;</option>
         <option value="&#33719;&#21033;&#22238;&#39304;">&#33719;&#21033;&#22238;&#39304;</option>
-        <option value="&#24608;&#24681;&#24120;&#22312;">&#24608;&#24681;&#24120;&#22312;</option>
+        <option value="&#20854;&#20182;">&#20854;&#20182;</option>
       </select>
-      <input class="form-input" id="editReasonCustom" placeholder="&#33258;&#23450;&#20041;&#20107;&#30001;&#65288;&#21487;&#36873;&#65289;" maxlength="50" style="margin-top:8px;display:none">
+      <input class="form-input" id="editReasonCustom" placeholder="&#33258;&#23450;&#20041;&#31867;&#21035;&#65288;&#21487;&#36873;&#65289;" maxlength="50" style="margin-top:8px;display:none">
     </div>
     <div class="form-group">
       <div class="form-label required">&#27963;&#21160;&#22320;&#28857;</div>
@@ -2072,6 +2074,13 @@ function openDetail(id) {
     </button>
 
     <div class="detail-card">
+      ${record.note ? `<div class="detail-row">
+        <span class="detail-icon">📝</span>
+        <div class="detail-content">
+          <div class="detail-sub">活动备注</div>
+          <div class="detail-val">${escHtml(record.note)}</div>
+        </div>
+      </div>` : ''}
       <div class="detail-row">
         <span class="detail-icon">📍</span>
         <div class="detail-content">
@@ -2202,10 +2211,13 @@ function startEditRecord(id) {
   state.editPayers = [...(record.payers || [])]
   state.editImages = [...(record.images || [])]
 
+  // 设置备注
+  document.getElementById('editNote').value = record.note || ''
+
   // 设置事由选择
   const reasonSelect = document.getElementById('editReason')
   const reasonCustom = document.getElementById('editReasonCustom')
-  const predefinedReasons = ['其他', '生日聚餐', '季度团建', '升职庆祝', '获利回馈', '感恩常在']
+  const predefinedReasons = ['慷慨宴请', '获利回馈', '其他']
   if (predefinedReasons.includes(record.reason)) {
     reasonSelect.value = record.reason || ''
     reasonCustom.style.display = 'none'
@@ -2353,11 +2365,12 @@ async function saveEditRecord() {
   const reasonSelect = document.getElementById('editReason')
   const reasonCustom = document.getElementById('editReasonCustom')
   const reason = reasonSelect.value === '其他' ? (reasonCustom.value.trim() || '其他') : reasonSelect.value
-  
+  const note = document.getElementById('editNote').value.trim()
+
   const location = document.getElementById('editLocation').value.trim()
   const dinnerDate = document.getElementById('editDate').value
 
-  if (!reason || reason === '') { showToast('请选择活动事由'); return }
+  if (!reason || reason === '') { showToast('请选择活动类别'); return }
   if (!location) { showToast('请填写活动地点'); return }
   if (!dinnerDate) { showToast('请选择活动日期'); return }
   if (state.editParticipants.length === 0) { showToast('请添加至少一名参与人'); return }
@@ -2371,15 +2384,17 @@ async function saveEditRecord() {
   const oldReason = record.reason
   const oldLocation = record.location
   const oldAmount = record.totalAmount
+  const oldNote = record.note || ''
   const oldParticipants = record.participants ? record.participants.join('、') : ''
   const newParticipants = state.editParticipants.join('、')
   const newAmount = parseFloat(total.toFixed(2))
 
   let changes = []
-  if (oldReason !== reason) changes.push(`事由：「${oldReason}」→「${reason}」`)
+  if (oldReason !== reason) changes.push(`类别：「${oldReason}」→「${reason}」`)
   if (oldLocation !== location) changes.push(`地点：「${oldLocation}」→「${location}」`)
   if (oldAmount !== newAmount) changes.push(`金额：¥${oldAmount}→¥${newAmount}`)
   if (oldParticipants !== newParticipants) changes.push(`参与人：「${oldParticipants}」→「${newParticipants}」`)
+  if (oldNote !== note) changes.push(`备注已更新`)
 
   const changeText = changes.length > 0 ? changes.join('；') : '内容已修改'
 
@@ -2387,6 +2402,7 @@ async function saveEditRecord() {
   record.location = location
   record.dinnerDate = dinnerDate
   record.totalAmount = newAmount
+  record.note = note
   record.participants = [...state.editParticipants]
   record.payers = [...state.editPayers]
   record.images = [...state.editImages]
@@ -2591,10 +2607,11 @@ function removeImage(index) {
 // ============================================================
 async function submitRecord() {
   const reason = getEffectiveReason()
+  const note = document.getElementById('inputNote').value.trim()
   const location = document.getElementById('inputLocation').value.trim()
   const dinnerDate = document.getElementById('inputDate').value
 
-  if (!reason || reason === '') { showToast('请选择活动事由'); return }
+  if (!reason || reason === '') { showToast('请选择活动类别'); return }
   if (!location) { showToast('请填写活动地点'); return }
   if (!dinnerDate) { showToast('请选择活动日期'); return }
   if (state.participants.length === 0) { showToast('请添加至少一名参与人'); return }
@@ -2605,6 +2622,7 @@ async function submitRecord() {
   const record = {
     id: 'rec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
     reason,
+    note,
     location,
     dinnerDate,
     totalAmount: parseFloat(total.toFixed(2)),
@@ -2656,6 +2674,7 @@ async function submitRecord() {
   if (ok) {
     showSuccessModal()
 
+    document.getElementById('inputNote').value = ''
     document.getElementById('inputReason').value = ''
     document.getElementById('inputReasonCustom').value = ''
     document.getElementById('inputReasonCustom').style.display = 'none'
@@ -3258,7 +3277,7 @@ function renderMemberStats() {
       memberData[payer.name].total += payer.amount
       if (rec.reason === '获利回馈') {
         memberData[payer.name].hui += payer.amount
-      } else if (rec.reason === '感恩常在') {
+      } else if (rec.reason === '慷慨宴请') {
         memberData[payer.name].chang += payer.amount
       }
     }
@@ -3292,7 +3311,7 @@ function renderMemberStats() {
         </div>
         <div class="member-stat-breakdown">
           <span class="member-stat-hui">获利回馈：¥${data.hui.toFixed(2)} (${huiRatio}%)</span>
-          <span class="member-stat-chang">感恩常在：¥${data.chang.toFixed(2)} (${changRatio}%)</span>
+          <span class="member-stat-chang">慷慨宴请：¥${data.chang.toFixed(2)} (${changRatio}%)</span>
         </div>
       </div>
     `
