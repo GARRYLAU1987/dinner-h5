@@ -1234,9 +1234,9 @@
       <div class="form-label required">&#27963;&#21160;&#31867;&#21035;</div>
       <select class="form-input" id="inputReason" onchange="handleReasonChange(this)">
         <option value="">&#35831;&#36873;&#25321;&#31867;&#21035;</option>
-        <option value="&#24936;&#24936;&#23476;&#35831;">&#24936;&#24936;&#23476;&#35831;</option>
-        <option value="&#33719;&#21033;&#22238;&#39304;">&#33719;&#21033;&#22238;&#39304;</option>
-        <option value="&#20854;&#20182;">&#20854;&#20182;</option>
+        <option value="慷慨宴请">慷慨宴请</option>
+        <option value="获利回馈">获利回馈</option>
+        <option value="其他">其他</option>
       </select>
       <input class="form-input" id="inputReasonCustom" placeholder="&#33258;&#23450;&#20041;&#31867;&#21035;&#65288;&#21487;&#36873;&#65289;" maxlength="50" style="margin-top:8px;display:none">
     </div>
@@ -1305,10 +1305,10 @@
     <div class="form-group">
       <div class="form-label required">&#27963;&#21160;&#31867;&#21035;</div>
       <select class="form-input" id="editReason" onchange="handleEditReasonChange(this)">
-        <option value="">&#35831;&#36873;&#25321;&#31867;&#21035;</option>
-        <option value="&#24936;&#24936;&#23476;&#35831;">&#24936;&#24936;&#23476;&#35831;</option>
-        <option value="&#33719;&#21033;&#22238;&#39304;">&#33719;&#21033;&#22238;&#39304;</option>
-        <option value="&#20854;&#20182;">&#20854;&#20182;</option>
+        <option value="">请选择类别</option>
+        <option value="慷慨宴请">慷慨宴请</option>
+        <option value="获利回馈">获利回馈</option>
+        <option value="其他">其他</option>
       </select>
       <input class="form-input" id="editReasonCustom" placeholder="&#33258;&#23450;&#20041;&#31867;&#21035;&#65288;&#21487;&#36873;&#65289;" maxlength="50" style="margin-top:8px;display:none">
     </div>
@@ -1669,6 +1669,12 @@ function migrateData(content) {
 
   // 将现有记录的创建者自动转为已审核成员
   for (const rec of content.records) {
+    // 兼容旧数据：修正错误编码和旧类别名称
+    const r = (rec.reason || '').trim()
+    if (r === '慨慨宴请' || r === '感恩常在') {
+      rec.reason = '慷慨宴请'
+    }
+
     if (rec.submitterId && !content.members[rec.submitterId]) {
       content.members[rec.submitterId] = {
         name: rec.submitterName || '用户_' + rec.submitterId.substr(-4),
@@ -2218,16 +2224,18 @@ function startEditRecord(id) {
   // 设置备注
   document.getElementById('editNote').value = record.note || ''
 
-  // 设置事由选择
+  // 设置事由选择（兼容旧数据：慨慨宴请/感恩常在 都映射为 慷慨宴请）
   const reasonSelect = document.getElementById('editReason')
   const reasonCustom = document.getElementById('editReasonCustom')
+  const rawReason = (record.reason || '').trim()
+  const normalizedReason = rawReason === '慨慨宴请' || rawReason === '感恩常在' ? '慷慨宴请' : rawReason
   const predefinedReasons = ['慷慨宴请', '获利回馈', '其他']
-  if (predefinedReasons.includes(record.reason)) {
-    reasonSelect.value = record.reason || ''
+  if (predefinedReasons.includes(normalizedReason)) {
+    reasonSelect.value = normalizedReason
     reasonCustom.style.display = 'none'
   } else {
     reasonSelect.value = '其他'
-    reasonCustom.value = record.reason || ''
+    reasonCustom.value = normalizedReason || ''
     reasonCustom.style.display = 'block'
   }
   document.getElementById('editLocation').value = record.location || ''
@@ -3268,58 +3276,62 @@ function toggleMemberStats() {
 // 渲染成员统计
 function renderMemberStats() {
   const list = document.getElementById('memberStatsList')
-  
+
   // 收集每个成员的支付数据
   const memberData = {}
-  
+
   for (const rec of state.records) {
     if (!rec.payers) continue
-    // 兼容旧数据：感恩常在 映射为 慷慨宴请
+    // 兼容旧数据：慨慨宴请/感恩常在 映射为 慷慨宴请
     const reason = (rec.reason || '').trim()
-    const normalizedReason = reason === '感恩常在' ? '慷慨宴请' : reason
+    const normalizedReason = (reason === '慨慨宴请' || reason === '感恩常在') ? '慷慨宴请' : reason
 
     for (const payer of rec.payers) {
       if (!memberData[payer.name]) {
-        memberData[payer.name] = { total: 0, hui: 0, chang: 0 }
+        memberData[payer.name] = { total: 0, hui: 0, chang: 0, other: 0 }
       }
       memberData[payer.name].total += payer.amount
       if (normalizedReason === '获利回馈') {
         memberData[payer.name].hui += payer.amount
       } else if (normalizedReason === '慷慨宴请') {
         memberData[payer.name].chang += payer.amount
+      } else {
+        memberData[payer.name].other += payer.amount
       }
     }
   }
-  
+
   // 计算总金额
   const total = Object.values(memberData).reduce((s, d) => s + d.total, 0)
-  
+
   // 按金额排序
   const sorted = Object.entries(memberData).sort((a, b) => b[1].total - a[1].total)
-  
+
   if (sorted.length === 0) {
     list.innerHTML = '<div style="text-align:center;color:#999;padding:20px">暂无支付数据</div>'
     return
   }
-  
+
   list.innerHTML = sorted.map(([name, data]) => {
     const ratio = total > 0 ? (data.total / total * 100).toFixed(1) : '0'
     const huiRatio = data.total > 0 ? (data.hui / data.total * 100).toFixed(0) : '0'
     const changRatio = data.total > 0 ? (data.chang / data.total * 100).toFixed(0) : '0'
-    
+    const otherRatio = data.total > 0 ? (data.other / data.total * 100).toFixed(0) : '0'
+
     return `
       <div class="member-stat-card">
         <div class="member-stat-header">
           <span class="member-stat-name">${escHtml(name)}</span>
           <span class="member-stat-total">¥${data.total.toFixed(2)}</span>
         </div>
-        <div class="member-stat-ratio">占比 ${ratio}%（本月度/年度总支出）</div>
+        <div class="member-stat-ratio">占比 ${ratio}%（总支出）</div>
         <div class="member-stat-bar">
           <div class="member-stat-bar-fill" style="width:${ratio}%"></div>
         </div>
         <div class="member-stat-breakdown">
           <span class="member-stat-hui">获利回馈：¥${data.hui.toFixed(2)} (${huiRatio}%)</span>
           <span class="member-stat-chang">慷慨宴请：¥${data.chang.toFixed(2)} (${changRatio}%)</span>
+          <span style="color:#888">其他：¥${data.other.toFixed(2)} (${otherRatio}%)</span>
         </div>
       </div>
     `
