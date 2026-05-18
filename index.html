@@ -993,6 +993,53 @@ let state = {
 }
 
 // ============================================================
+//  图片上传：GitHub dinner-images 仓库（外迁 Base64）
+// ============================================================
+async function uploadImageToGitHub(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = async e => {
+      const base64Full = e.target.result
+      const base64Data = base64Full.split(',')[1]
+      const ext = file.name ? file.name.split('.').pop() : 'jpg'
+      const filename = 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6) + '.' + ext
+      const path = 'images/' + filename
+
+      try {
+        const resp = await fetch(
+          `https://api.github.com/repos/${GH_OWNER}/dinner-images/contents/${path}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Authorization': 'token ' + GH_TOKEN,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: 'Upload ' + filename,
+              content: base64Data,
+              branch: 'main'
+            })
+          }
+        )
+        const json = await resp.json()
+        if (json.content && json.content.sha) {
+          const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/dinner-images/main/${path}`
+          resolve(rawUrl)
+        } else {
+          console.warn('GitHub 上传失败:', json)
+          resolve(base64Full)  // 降级：保留 base64
+        }
+      } catch (err) {
+        console.warn('图片上传失败，降级保留 base64:', err)
+        resolve(base64Full)
+      }
+    }
+    reader.onerror = () => reject(new Error('读取文件失败'))
+    reader.readAsDataURL(file)
+  })
+}
+
+// ============================================================
 // GitHub API &#23553;&#35013;
 // ============================================================
 async function ghGet(path) {
@@ -1446,19 +1493,32 @@ function editRemovePayer(index) {
   renderEditPayerList()
 }
 
-function handleEditImages(event) {
+async function handleEditImages(event) {
   const files = Array.from(event.target.files)
   const remaining = 9 - state.editImages.length
   const toAdd = files.slice(0, remaining)
+  if (toAdd.length === 0) return
 
-  toAdd.forEach(file => {
-    const reader = new FileReader()
-    reader.onload = e => {
-      state.editImages.push(e.target.result)
-      renderEditImageGrid()
+  const grid = document.getElementById('editImageGrid')
+  const uploadIndicator = document.createElement('div')
+  uploadIndicator.id = 'editUploadIndicator'
+  uploadIndicator.innerHTML = '<div style="text-align:center;color:#888;font-size:12px;padding:8px;">正在上传图片...</div>'
+  grid.appendChild(uploadIndicator)
+
+  for (const file of toAdd) {
+    state.uploadingImages++
+    try {
+      const url = await uploadImageToGitHub(file)
+      state.editImages.push(url)
+    } catch (e) {
+      console.error('图片上传异常:', e)
+    } finally {
+      state.uploadingImages--
     }
-    reader.readAsDataURL(file)
-  })
+  }
+  const ind = document.getElementById('editUploadIndicator')
+  if (ind) ind.remove()
+  renderEditImageGrid()
   event.target.value = ''
 }
 
@@ -1483,8 +1543,10 @@ function editRemoveImage(index) {
   renderEditImageGrid()
 }
 
-function previewBase64(index) {
-  document.getElementById('previewImg').src = state.editImages[index]
+// 统一图片预览（支持 base64 旧图片 和 URL 新图片）
+function previewUrl(page, index) {
+  const imgs = page === 'new' ? state.images : state.editImages
+  document.getElementById('previewImg').src = imgs[index]
   document.getElementById('imgPreview').classList.add('show')
 }
 
@@ -1643,19 +1705,37 @@ function removePayer(index) {
   renderPayerList()
 }
 
-function handleImages(event) {
+async function handleImages(event) {
   const files = Array.from(event.target.files)
   const remaining = 9 - state.images.length
   const toAdd = files.slice(0, remaining)
 
-  toAdd.forEach(file => {
-    const reader = new FileReader()
-    reader.onload = e => {
-      state.images.push(e.target.result)
-      renderImageGrid()
+  if (toAdd.length === 0) return
+
+  // 显示上传状态
+  const grid = document.getElementById('imageGrid')
+  const uploadIndicator = document.createElement('div')
+  uploadIndicator.id = 'uploadIndicator'
+  uploadIndicator.innerHTML = '<div style="text-align:center;color:#888;font-size:12px;padding:8px;">正在上传图片...</div>'
+  grid.appendChild(uploadIndicator)
+
+  for (const file of toAdd) {
+    state.uploadingImages++
+    try {
+      const url = await uploadImageToGitHub(file)
+      state.images.push(url)
+    } catch (e) {
+      console.error('图片上传异常:', e)
+    } finally {
+      state.uploadingImages--
     }
-    reader.readAsDataURL(file)
-  })
+  }
+
+  // 移除上传提示
+  const indicator = document.getElementById('uploadIndicator')
+  if (indicator) indicator.remove()
+
+  renderImageGrid()
   event.target.value = ''
 }
 
