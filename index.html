@@ -1942,16 +1942,16 @@ function migrateData(content) {
     // 兼容旧数据：修正错误编码和旧类别名称
     const r = (rec.reason || '').trim()
     if (r === '慨慨宴请' || r === '感恩常在' || r === '慷慨宴请') {
-      rec.reason = '赢钱出翻'
+      rec.reason = '慷慨请客'
     }
     if (r === '获利回馈') {
-      rec.reason = '慷慨请客'
+      rec.reason = '赢钱出翻'
     }
 
     // 迁移旧支付性质
     for (const p of (rec.payers || [])) {
-      if (p.nature === '获利回馈') p.nature = '慷慨请客'
-      if (p.nature === '慨慨宴请' || p.nature === '感恩常在' || p.nature === '慷慨宴请') p.nature = '赢钱出翻'
+      if (p.nature === '慷慨宴请' || p.nature === '感恩常在' || p.nature === '慷慨宴请') p.nature = '慷慨请客'
+      if (p.nature === '获利回馈') p.nature = '赢钱出翻'
     }
 
     if (rec.submitterId && !content.members[rec.submitterId]) {
@@ -2709,7 +2709,7 @@ function startEditRecord(id) {
   const reasonSelect = document.getElementById('editReason')
   const reasonCustom = document.getElementById('editReasonCustom')
   const rawReason = (record.reason || '').trim()
-  const normalizedReason = rawReason === '慨慨宴请' || rawReason === '感恩常在' || rawReason === '慷慨宴请' ? '赢钱出翻' : rawReason
+  const normalizedReason = rawReason === '慨慨宴请' || rawReason === '感恩常在' || rawReason === '慷慨宴请' ? '慷慨请客' : (rawReason === '获利回馈' ? '赢钱出翻' : rawReason)
   const predefinedReasons = ['赢钱出翻', '慷慨请客', '其他']
   if (predefinedReasons.includes(normalizedReason)) {
     reasonSelect.value = normalizedReason
@@ -4107,7 +4107,7 @@ function renderMemberStats() {
       memberData[payer.name].total += payer.amount
       // 优先使用 payer 自身的 nature（新数据），旧数据 fallback 到活动 reason
       const nature = (payer.nature || rec.reason || '').trim()
-      const normalizedNature = (nature === '慨慨宴请' || nature === '感恩常在' || nature === '慷慨宴请') ? '赢钱出翻' : (nature === '获利回馈' ? '慷慨请客' : nature)
+      const normalizedNature = (nature === '慨慨宴请' || nature === '感恩常在' || nature === '慷慨宴请') ? '慷慨请客' : (nature === '获利回馈' ? '赢钱出翻' : nature)
       if (normalizedNature === '慷慨请客') {
         memberData[payer.name].hui += payer.amount
       } else if (normalizedNature === '赢钱出翻') {
