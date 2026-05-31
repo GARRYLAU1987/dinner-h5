@@ -1299,77 +1299,6 @@
     padding: 1px 6px;
     border-radius: 8px;
   }
-
-  /* 支付性质选择按钮 */
-  .nature-select-btn {
-    padding: 8px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    cursor: pointer;
-    border: 1.5px solid var(--primary);
-    color: var(--primary);
-    background: #fff5f0;
-    white-space: nowrap;
-    user-select: none;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
-    transition: all 0.2s;
-  }
-  .nature-select-btn:active {
-    opacity: 0.8;
-    background: #ffe8dd;
-  }
-  .nature-select-btn .ns-arrow {
-    font-size: 10px;
-    opacity: 0.6;
-  }
-  .payer-nature-clickable {
-    cursor: pointer;
-    color: var(--primary);
-    border-bottom: 1px dashed var(--primary-light);
-    transition: all 0.2s;
-    user-select: none;
-  }
-  .payer-nature-clickable:active {
-    opacity: 0.7;
-  }
-  /* 支付性质弹出选择器 */
-  .nature-picker-options {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  .nature-picker-item {
-    padding: 14px 16px;
-    border-radius: 12px;
-    font-size: 15px;
-    cursor: pointer;
-    border: 1.5px solid #eee;
-    text-align: center;
-    transition: all 0.15s;
-    color: #555;
-  }
-  .nature-picker-item:active {
-    background: #fff5f0;
-  }
-  .nature-picker-item.selected {
-    border-color: var(--primary);
-    background: #fff5f0;
-    color: var(--primary);
-    font-weight: 600;
-  }
-  .payer-remark {
-    font-size: 11px;
-    color: #aaa;
-    margin-left: 4px;
-  }
-  .payer-remark-input {
-    width: 100%;
-    margin-top: 8px;
-  }
 </style>
 </head>
 <body>
@@ -1437,8 +1366,8 @@
       <div class="form-label required">&#27963;&#21160;&#31867;&#21035;</div>
       <select class="form-input" id="inputReason" onchange="handleReasonChange(this)">
         <option value="">&#35831;&#36873;&#25321;&#31867;&#21035;</option>
-        <option value="赢钱出翻">赢钱出翻</option>
-        <option value="慷慨请客">慷慨请客</option>
+        <option value="慷慨宴请">慷慨宴请</option>
+        <option value="获利回馈">获利回馈</option>
         <option value="其他">其他</option>
       </select>
       <input class="form-input" id="inputReasonCustom" placeholder="&#33258;&#23450;&#20041;&#31867;&#21035;&#65288;&#21487;&#36873;&#65289;" maxlength="50" style="margin-top:8px;display:none">
@@ -1467,28 +1396,29 @@
       </div>
     </div>
     <div class="form-group">
-      <div class="form-label required">&#25903;&#20184;&#20154;&#21592;&#26126;&#32454;&#65288;&#25903;&#25345;&#22810;&#20154;&#32852;&#21512;&#65289;</div>
+      <div class="form-label required">&#32467;&#36134;&#26126;&#32454;&#65288;&#25903;&#25345;&#22810;&#20154;&#32852;&#21512;&#65289;</div>
       <div class="payer-list" id="payerList"></div>
       <div class="total-row" id="totalRow" style="display:none">
         <span class="total-label">&#21512;&#35745;&#37329;&#39069;</span>
         <span class="total-amount" id="totalDisplay">&#165;0</span>
       </div>
       <div class="member-select-toggle" onclick="togglePayerMemberSelect('add')">
-        <span>&#128101; &#28857;&#20987;&#36873;&#25321;&#25903;&#20184;&#25104;&#21592;</span>
+        <span>&#128101; &#28857;&#20987;&#36873;&#25321;&#32467;&#36134;&#25104;&#21592;</span>
         <span class="toggle-arrow" id="addPayerMemberToggleArrow">&#9660;</span>
       </div>
       <div class="member-select-panel" id="addPayerMemberSelectPanel" style="display:none">
         <div id="addPayerMemberCheckboxList"></div>
       </div>
       <div class="input-row" style="margin-top:8px">
-        <input class="form-input flex-1" id="inputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#25903;&#20184;&#20154;&#22995;&#21517;">
+        <input class="form-input flex-1" id="inputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#32467;&#36134;&#20154;&#22995;&#21517;">
         <input class="form-input" id="inputPayerAmount" type="number" placeholder="&#37329;&#39069;" style="width:70px">
-        <div class="nature-select-btn" id="addNatureToggle" data-value="赢钱出翻" onclick="openNaturePicker('add',null)">
-          <span>🎲 赢钱出翻</span><span class="ns-arrow">▼</span>
-        </div>
+        <select class="form-input" id="inputPayerNature" style="width:85px;font-size:13px">
+          <option value="慷慨宴请">慷慨宴请</option>
+          <option value="获利回馈">获利回馈</option>
+          <option value="其他">其他</option>
+        </select>
         <button class="btn-add" onclick="addPayer()">&#28155;&#21152;</button>
       </div>
-      <input class="form-input payer-remark-input" id="inputPayerRemark" placeholder="&#20184;&#27454;&#22791;&#27880;&#65288;&#21487;&#36873;&#65292;&#22914;&#37202;&#27700;&#12289;&#39184;&#36153;&#31561;&#65289;" maxlength="50">
     </div>
     <div class="form-group">
       <div class="form-label">&#20304;&#35777;&#22270;&#29255;&#65288;&#21487;&#36873;&#65289;</div>
@@ -1520,8 +1450,8 @@
       <div class="form-label required">&#27963;&#21160;&#31867;&#21035;</div>
       <select class="form-input" id="editReason" onchange="handleEditReasonChange(this)">
         <option value="">请选择类别</option>
-        <option value="赢钱出翻">赢钱出翻</option>
-        <option value="慷慨请客">慷慨请客</option>
+        <option value="慷慨宴请">慷慨宴请</option>
+        <option value="获利回馈">获利回馈</option>
         <option value="其他">其他</option>
       </select>
       <input class="form-input" id="editReasonCustom" placeholder="&#33258;&#23450;&#20041;&#31867;&#21035;&#65288;&#21487;&#36873;&#65289;" maxlength="50" style="margin-top:8px;display:none">
@@ -1550,28 +1480,29 @@
       </div>
     </div>
     <div class="form-group">
-      <div class="form-label required">&#25903;&#20184;&#20154;&#21592;&#26126;&#32454;</div>
+      <div class="form-label required">&#32467;&#36134;&#26126;&#32454;</div>
       <div class="payer-list" id="editPayerList"></div>
       <div class="total-row" id="editTotalRow" style="display:none">
         <span class="total-label">&#21512;&#35745;&#37329;&#39069;</span>
         <span class="total-amount" id="editTotalDisplay">&#165;0</span>
       </div>
       <div class="member-select-toggle" onclick="togglePayerMemberSelect('edit')">
-        <span>&#128101; &#28857;&#20987;&#36873;&#25321;&#25903;&#20184;&#25104;&#21592;</span>
+        <span>&#128101; &#28857;&#20987;&#36873;&#25321;&#32467;&#36134;&#25104;&#21592;</span>
         <span class="toggle-arrow" id="editPayerMemberToggleArrow">&#9660;</span>
       </div>
       <div class="member-select-panel" id="editPayerMemberSelectPanel" style="display:none">
         <div id="editPayerMemberCheckboxList"></div>
       </div>
       <div class="input-row" style="margin-top:8px">
-        <input class="form-input flex-1" id="editInputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#25903;&#20184;&#20154;&#22995;&#21517;">
+        <input class="form-input flex-1" id="editInputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#32467;&#36134;&#20154;&#22995;&#21517;">
         <input class="form-input" id="editInputPayerAmount" type="number" placeholder="&#37329;&#39069;" style="width:70px">
-        <div class="nature-select-btn" id="editNatureToggle" data-value="赢钱出翻" onclick="openNaturePicker('edit',null)">
-          <span>🎲 赢钱出翻</span><span class="ns-arrow">▼</span>
-        </div>
+        <select class="form-input" id="editInputPayerNature" style="width:85px;font-size:13px">
+          <option value="慷慨宴请">慷慨宴请</option>
+          <option value="获利回馈">获利回馈</option>
+          <option value="其他">其他</option>
+        </select>
         <button class="btn-add" onclick="editAddPayer()">&#28155;&#21152;</button>
       </div>
-      <input class="form-input payer-remark-input" id="editInputPayerRemark" placeholder="&#20184;&#27454;&#22791;&#27880;&#65288;&#21487;&#36873;&#65292;&#22914;&#37202;&#27700;&#12289;&#39184;&#36153;&#31561;&#65289;" maxlength="50">
     </div>
     <div class="form-group">
       <div class="form-label">&#20304;&#35777;&#22270;&#29255;&#65288;&#21487;&#36873;&#65289;</div>
@@ -1740,21 +1671,6 @@
   </div>
 </div>
 
-
-<!-- ===== 支付性质选择弹窗 ===== -->
-<div class="modal-overlay" id="naturePickerModal">
-  <div class="modal-box">
-    <div class="modal-title">选择支付性质</div>
-    <div class="nature-picker-options">
-      <div class="nature-picker-item" data-value="赢钱出翻" onclick="pickNature('赢钱出翻')">🎲 赢钱出翻</div>
-      <div class="nature-picker-item" data-value="慷慨请客" onclick="pickNature('慷慨请客')">🤝 慷慨请客</div>
-      <div class="nature-picker-item" data-value="其他" onclick="pickNature('其他')">📌 其他</div>
-    </div>
-    <div class="modal-footer" style="margin-top:8px">
-      <button class="btn-cancel" onclick="closeNaturePicker()">取消</button>
-    </div>
-  </div>
-</div>
 <!-- ===== 管理员验证弹窗 ===== -->
 <div class="modal-overlay" id="adminLoginModal">
   <div class="modal-box">
@@ -1839,9 +1755,7 @@ let state = {
   editImages: [],
   adminMode: false,
   dataSha: null,
-  uploadingImages: 0,
-  editHasChanges: false,
-  naturePickerContext: null
+  uploadingImages: 0
 }
 
 // ============================================================
@@ -1937,38 +1851,12 @@ function migrateData(content) {
   if (!content.notifications) content.notifications = []
   if (!content.auditLog) content.auditLog = []
 
-  let changed = false
-
   // 将现有记录的创建者自动转为已审核成员
   for (const rec of content.records) {
     // 兼容旧数据：修正错误编码和旧类别名称
     const r = (rec.reason || '').trim()
-    if (r === '慨慨宴请' || r === '感恩常在' || r === '慷慨宴请') {
-      rec.reason = '慷慨请客'
-      changed = true
-    }
-    if (r === '获利回馈') {
-      rec.reason = '赢钱出翻'
-      changed = true
-    }
-
-    // 迁移旧支付性质
-    for (const p of (rec.payers || [])) {
-      if (p.nature === '慷慨宴请' || p.nature === '感恩常在' || p.nature === '慨慨宴请') { p.nature = '慷慨请客'; changed = true }
-      if (p.nature === '获利回馈') { p.nature = '赢钱出翻'; changed = true }
-    }
-
-    // 修复 reason 与 payer.nature 不一致（旧数据迁移导致的不匹配）
-    for (const p of (rec.payers || [])) {
-      const pn = (p.nature || '').trim()
-      if (rec.reason === '慷慨请客' && pn === '赢钱出翻') {
-        p.nature = '慷慨请客'
-        changed = true
-      }
-      if (rec.reason === '赢钱出翻' && pn === '慷慨请客') {
-        p.nature = '赢钱出翻'
-        changed = true
-      }
+    if (r === '慨慨宴请' || r === '感恩常在') {
+      rec.reason = '慷慨宴请'
     }
 
     if (rec.submitterId && !content.members[rec.submitterId]) {
@@ -1978,7 +1866,6 @@ function migrateData(content) {
         approvedBy: 'system',
         approvedAt: rec.createdAt || new Date().toISOString()
       }
-      changed = true
     }
     // 同时迁移 editHistory 中的编辑者
     for (const h of (rec.editHistory || [])) {
@@ -1989,12 +1876,11 @@ function migrateData(content) {
           approvedBy: 'system',
           approvedAt: rec.createdAt || new Date().toISOString()
         }
-        changed = true
       }
     }
   }
 
-  return { data: content, changed }
+  return content
 }
 
 // ============================================================
@@ -2029,11 +1915,7 @@ async function loadRecords() {
       throw new Error('无法获取文件内容')
     }
 
-    const migrateResult = migrateData(content)
-    content = migrateResult.data
-    if (migrateResult.changed) {
-      try { await saveDataSilent(content) } catch(e) { console.warn('migrateData save failed', e) }
-    }
+    content = migrateData(content)
     state.records = content.records || []
     state.members = content.members || {}
     state.pendingMembers = content.pendingMembers || []
@@ -2315,63 +2197,6 @@ function getNowStr() {
   return new Date().toLocaleString('zh-CN')
 }
 
-// 选择支付性质（更新按钮显示）
-function selectNature(type, value) {
-  const btn = document.getElementById(type === 'add' ? 'addNatureToggle' : 'editNatureToggle')
-  if (!btn) return
-  btn.setAttribute('data-value', value)
-  const emoji = value === '赢钱出翻' ? '🎲' : value === '慷慨请客' ? '🤝' : '📌'
-  btn.innerHTML = `<span>${emoji} ${escHtml(value)}</span><span class="ns-arrow">▼</span>`
-}
-
-// 打开支付性质选择弹窗
-function openNaturePicker(type, payerIndex) {
-  state.naturePickerContext = { type, payerIndex }
-  // 确定当前选中的性质
-  let currentNature = '赢钱出翻'
-  if (payerIndex !== null && payerIndex !== undefined) {
-    const payers = type === 'add' ? state.payers : state.editPayers
-    currentNature = payers[payerIndex].nature || '其他'
-  } else {
-    const btn = document.getElementById(type === 'add' ? 'addNatureToggle' : 'editNatureToggle')
-    if (btn) currentNature = btn.getAttribute('data-value') || '赢钱出翻'
-  }
-  // 高亮当前选中项
-  document.querySelectorAll('.nature-picker-item').forEach(item => {
-    item.classList.toggle('selected', item.getAttribute('data-value') === currentNature)
-  })
-  document.getElementById('naturePickerModal').classList.add('show')
-}
-
-// 关闭支付性质选择弹窗
-function closeNaturePicker() {
-  document.getElementById('naturePickerModal').classList.remove('show')
-  state.naturePickerContext = null
-}
-
-// 选择支付性质
-function pickNature(value) {
-  const ctx = state.naturePickerContext
-  if (!ctx) return
-
-  if (ctx.payerIndex !== null && ctx.payerIndex !== undefined) {
-    // 修改已添加的支付人员性质
-    const payers = ctx.type === 'add' ? state.payers : state.editPayers
-    payers[ctx.payerIndex].nature = value
-    if (ctx.type === 'add') {
-      renderPayerList()
-    } else {
-      state.editHasChanges = true
-      renderEditPayerList()
-    }
-  } else {
-    // 修改新增支付人员的默认性质
-    selectNature(ctx.type, value)
-  }
-
-  closeNaturePicker()
-}
-
 // 获取用户显示名称
 function getUserDisplayName(userId) {
   if (state.members[userId]) {
@@ -2428,7 +2253,7 @@ function renderList() {
         <span class="card-reason">${escHtml(cardTitle)}</span>
         <span class="card-date">${r.dinnerDate}</span>
       </div>
-      <div class="card-row"><span class="row-icon">🎉</span><span class="row-text">${escHtml(normalizeDisplay(r.reason))}</span></div>
+      <div class="card-row"><span class="row-icon">🎉</span><span class="row-text">${escHtml(r.reason)}</span></div>
       <div class="card-row"><span class="row-icon">📍</span><span class="row-text">${escHtml(r.location)}</span></div>
       <div class="card-row"><span class="row-icon">👥</span><span class="row-text">${escHtml(participantsStr)}</span></div>
       <div class="card-footer">
@@ -2445,14 +2270,6 @@ function escHtml(str) {
   return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
-// 显示归一化：将旧值映射为新值，确保页面渲染正确
-function normalizeDisplay(value) {
-  const v = String(value || '').trim()
-  if (v === '慨慨宴请' || v === '感恩常在' || v === '慷慨宴请') return '慷慨请客'
-  if (v === '获利回馈') return '赢钱出翻'
-  return v
-}
-
 // ============================================================
 // 详情页
 // ============================================================
@@ -2464,10 +2281,7 @@ function openDetail(id) {
   const payers = record.payers || []
   const payerRows = payers.map(p =>
     `<div class="payer-detail-item">
-      <span class="payer-detail-name-v">💳 ${escHtml(p.name)}
-        <span style="font-size:12px;color:#888">(${escHtml(normalizeDisplay(p.nature || '其他'))})</span>
-        ${p.remark ? `<span style="font-size:12px;color:#aaa"> · ${escHtml(p.remark)}</span>` : ''}
-      </span>
+      <span class="payer-detail-name-v">💳 ${escHtml(p.name)} <span style="font-size:12px;color:#888">(${escHtml(p.nature || '其他')})</span></span>
       <span class="payer-detail-amt">¥${p.amount}</span>
     </div>`
   ).join('')
@@ -2496,54 +2310,18 @@ function openDetail(id) {
   // 权限：所有已审核成员或管理员都可以编辑记录
   const canEdit = state.isApproved || state.isAdmin
 
-
-  // 活动记录创建人信息
+  // 底部创建者信息：如果是自己创建的，显示当前名字；否则显示成员列表中的名字
   const creatorName = record.submitterId === state.myId
     ? state.myName
     : getUserDisplayName(record.submitterId)
   const creatorIdShort = record.submitterId ? record.submitterId.substr(-4) : '----'
-  const creatorTag = record.submitterId === state.myId ? '<span style="color:var(--primary)">（我）</span>' : ''
-  const creatorInfoHtml = `
-    <div style="background:#f0fff4;border:1px solid #b7eb8f;border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
-      <span style="font-size:16px">👤</span>
-      <div style="flex:1">
-        <div style="font-size:12px;color:#52c41a;font-weight:600">活动记录创建人</div>
-        <div style="font-size:14px;color:#333">${escHtml(creatorName)}（ID:${creatorIdShort}）${creatorTag}</div>
-      </div>
-    </div>
-  `
 
   // 管理员修正创建者按钮（当创建者不是当前用户时）
   const fixCreatorBtn = (state.isAdmin && record.submitterId !== state.myId)
     ? `<button class="btn-edit-record" onclick="fixRecordCreator('${record.id}')" style="border-color:#27ae60;color:#27ae60;margin-bottom:8px;font-size:13px;padding:10px 0">
-        <span>📝 修正创建者为「${escHtml(state.myName)}」</span>
+        <span>📝 将创建者修正为「${escHtml(state.myName)}」</span>
       </button>`
     : ''
-
-  // 编辑成员列表（只统计实际提交了编辑的成员，去重）
-  const editorSet = new Set()
-  if (record.editHistory && record.editHistory.length > 0) {
-    for (const h of record.editHistory) {
-      if (h.editorId) editorSet.add(h.editorId)
-    }
-  }
-  // 排除创建者自己
-  if (record.submitterId) editorSet.delete(record.submitterId)
-  const editorIds = Array.from(editorSet)
-  let editorsHtml = ''
-  if (editorIds.length > 0) {
-    const editorTags = editorIds.map(eid => {
-      const ename = getUserDisplayName(eid)
-      const isMe = eid === state.myId
-      return `<span style="display:inline-block;background:#e6f7ff;border:1px solid #91d5ff;color:#1890ff;padding:2px 10px;border-radius:12px;font-size:12px;margin:2px">${escHtml(ename)}${isMe ? '<span style="color:var(--primary)">（我）</span>' : ''}</span>`
-    }).join('')
-    editorsHtml = `
-      <div style="background:#f0f7ff;border:1px solid #d6e4ff;border-radius:12px;padding:12px 16px;margin-bottom:12px">
-        <div style="font-size:12px;color:#1890ff;font-weight:600;margin-bottom:6px">✏️ 编辑成员（${editorIds.length}人）</div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px">${editorTags}</div>
-      </div>
-    `
-  }
 
   const editBtn = canEdit
     ? `<button class="btn-edit-record" onclick="startEditRecord('${record.id}')">
@@ -2564,8 +2342,6 @@ function openDetail(id) {
       <span class="detail-date">${record.dinnerDate}</span>
     </div>
 
-    ${creatorInfoHtml}
-    ${editorsHtml}
     ${fixCreatorBtn}
     ${editBtn}
 
@@ -2574,7 +2350,7 @@ function openDetail(id) {
         <span class="detail-icon">📝</span>
         <div class="detail-content">
           <div class="detail-sub">活动类别</div>
-          <div class="detail-val">${escHtml(normalizeDisplay(record.reason))}</div>
+          <div class="detail-val">${escHtml(record.reason)}</div>
         </div>
       </div>
       <div class="detail-row">
@@ -2594,7 +2370,7 @@ function openDetail(id) {
       <div class="detail-row">
         <span class="detail-icon">💳</span>
         <div class="detail-content">
-          <div class="detail-sub">支付人员明细</div>
+          <div class="detail-sub">结账明细</div>
           ${payerRows}
           <div class="total-line">
             <span class="total-line-label">合计</span>
@@ -2607,8 +2383,9 @@ function openDetail(id) {
     ${historySection}
     ${auditSection}
     <div class="detail-sub-text">
-      创建于 ${record.createdAt || record.dinnerDate}
-      ${record.lastEditTime ? ' · 最后修改：' + escHtml(getUserDisplayName(record.lastEditorId)) + ' ' + record.lastEditTime : ''}
+      由 ${escHtml(creatorName)}（ID:${creatorIdShort}）创建于 ${record.createdAt || record.dinnerDate}
+      ${record.submitterId === state.myId ? '<span style="color:var(--primary)">（我）</span>' : ''}
+      ${record.lastEditTime ? '<br>最后由 ' + escHtml(getUserDisplayName(record.lastEditorId)) + ' 修改于 ' + record.lastEditTime : ''}
     </div>
   `
 
@@ -2691,27 +2468,7 @@ function closeImgPreview() {
   document.getElementById('imgPreview').classList.remove('show')
 }
 
-function attachEditChangeListeners() {
-  // 给编辑页面的所有输入元素添加变化监听
-  const editInputs = ['editNote', 'editReason', 'editReasonCustom', 'editLocation', 'editDate', 'editInputParticipant', 'editInputPayerName', 'editInputPayerAmount', 'editInputPayerRemark']
-  editInputs.forEach(id => {
-    const el = document.getElementById(id)
-    if (el) {
-      el.oninput = () => { state.editHasChanges = true }
-      el.onchange = () => { state.editHasChanges = true }
-    }
-  })
-}
-
 function goBack() {
-  // 如果在编辑页面且有未保存的修改，提示确认
-  const editPage = document.getElementById('page-edit')
-  if (editPage && editPage.classList.contains('active') && state.editHasChanges) {
-    if (!confirm('您有未保存的修改，确定要退出吗？\n\n点击「确定」放弃修改并退出\n点击「取消」继续编辑')) {
-      return
-    }
-    state.editHasChanges = false
-  }
   switchTab('list')
 }
 
@@ -2736,11 +2493,12 @@ function startEditRecord(id) {
   // 设置备注
   document.getElementById('editNote').value = record.note || ''
 
-  // 设置事由选择（兼容旧数据）
+  // 设置事由选择（兼容旧数据：慨慨宴请/感恩常在 都映射为 慷慨宴请）
   const reasonSelect = document.getElementById('editReason')
   const reasonCustom = document.getElementById('editReasonCustom')
-  const normalizedReason = normalizeDisplay(record.reason)
-  const predefinedReasons = ['赢钱出翻', '慷慨请客', '其他']
+  const rawReason = (record.reason || '').trim()
+  const normalizedReason = rawReason === '慨慨宴请' || rawReason === '感恩常在' ? '慷慨宴请' : rawReason
+  const predefinedReasons = ['慷慨宴请', '获利回馈', '其他']
   if (predefinedReasons.includes(normalizedReason)) {
     reasonSelect.value = normalizedReason
     reasonCustom.style.display = 'none'
@@ -2757,11 +2515,6 @@ function startEditRecord(id) {
   renderEditImageGrid()
   renderMemberCheckboxLists()
   renderPayerMemberCheckboxLists()
-  selectNature('edit', '赢钱出翻')
-
-  state.editHasChanges = false
-  // 监听编辑页面输入变化
-  attachEditChangeListeners()
 
   switchToPage('edit')
   document.getElementById('navBack').classList.add('show')
@@ -2775,7 +2528,6 @@ function editAddParticipant() {
   if (state.editParticipants.includes(name)) { showToast('该人员已添加'); return }
   state.editParticipants.push(name)
   input.value = ''
-  state.editHasChanges = true
   renderEditParticipantTags()
 }
 
@@ -2788,23 +2540,19 @@ function renderEditParticipantTags() {
 
 function editRemoveParticipant(index) {
   state.editParticipants.splice(index, 1)
-  state.editHasChanges = true
   renderEditParticipantTags()
 }
 
 function editAddPayer() {
   const name = document.getElementById('editInputPayerName').value.trim()
   const amount = parseFloat(document.getElementById('editInputPayerAmount').value)
-  const nature = document.getElementById('editNatureToggle').getAttribute('data-value') || '赢钱出翻'
-  const remark = document.getElementById('editInputPayerRemark').value.trim()
-  if (!name) { showToast('请输入支付人姓名'); return }
+  const nature = document.getElementById('editInputPayerNature').value
+  if (!name) { showToast('请输入结账人姓名'); return }
   if (!amount || amount <= 0) { showToast('请输入有效金额'); return }
-  if (state.editPayers.find(p => p.name === name)) { showToast('该支付人已添加'); return }
-  state.editPayers.push({ name, amount, nature, remark })
+  if (state.editPayers.find(p => p.name === name)) { showToast('该结账人已添加'); return }
+  state.editPayers.push({ name, amount, nature })
   document.getElementById('editInputPayerName').value = ''
   document.getElementById('editInputPayerAmount').value = ''
-  document.getElementById('editInputPayerRemark').value = ''
-  state.editHasChanges = true
   renderEditPayerList()
 }
 
@@ -2821,10 +2569,7 @@ function renderEditPayerList() {
 
   list.innerHTML = state.editPayers.map((p, i) =>
     `<div class="payer-item">
-      <span class="payer-name">💳 ${escHtml(p.name)}
-        <span class="payer-nature-clickable" onclick="openNaturePicker('edit',${i})">(${escHtml(normalizeDisplay(p.nature || '其他'))})</span>
-        ${p.remark ? `<span class="payer-remark">· ${escHtml(p.remark)}</span>` : ''}
-      </span>
+      <span class="payer-name">💳 ${escHtml(p.name)} <span style="font-size:11px;color:#888">(${escHtml(p.nature || '其他')})</span></span>
       <span class="payer-amount">¥${p.amount}</span>
       <span class="payer-del" onclick="editRemovePayer(${i})">✕</span>
     </div>`
@@ -2837,7 +2582,6 @@ function renderEditPayerList() {
 
 function editRemovePayer(index) {
   state.editPayers.splice(index, 1)
-  state.editHasChanges = true
   renderEditPayerList()
 }
 
@@ -2866,7 +2610,6 @@ async function handleEditImages(event) {
   }
   const ind = document.getElementById('editUploadIndicator')
   if (ind) ind.remove()
-  state.editHasChanges = true
   renderEditImageGrid()
   event.target.value = ''
 }
@@ -2889,7 +2632,6 @@ function renderEditImageGrid() {
 
 function editRemoveImage(index) {
   state.editImages.splice(index, 1)
-  state.editHasChanges = true
   renderEditImageGrid()
 }
 
@@ -3004,7 +2746,6 @@ async function saveEditRecord() {
 
   const ok = await saveRecords()
   if (ok) {
-    state.editHasChanges = false
     showToast('✅ 修改已保存')
     setTimeout(() => openDetail(state.editRecordId), 800)
   }
@@ -3130,15 +2871,13 @@ function removeParticipant(index) {
 function addPayer() {
   const name = document.getElementById('inputPayerName').value.trim()
   const amount = parseFloat(document.getElementById('inputPayerAmount').value)
-  const nature = document.getElementById('addNatureToggle').getAttribute('data-value') || '赢钱出翻'
-  const remark = document.getElementById('inputPayerRemark').value.trim()
-  if (!name) { showToast('请输入支付人姓名'); return }
+  const nature = document.getElementById('inputPayerNature').value
+  if (!name) { showToast('请输入结账人姓名'); return }
   if (!amount || amount <= 0) { showToast('请输入有效金额'); return }
-  if (state.payers.find(p => p.name === name)) { showToast('该支付人已添加'); return }
-  state.payers.push({ name, amount, nature, remark })
+  if (state.payers.find(p => p.name === name)) { showToast('该结账人已添加'); return }
+  state.payers.push({ name, amount, nature })
   document.getElementById('inputPayerName').value = ''
   document.getElementById('inputPayerAmount').value = ''
-  document.getElementById('inputPayerRemark').value = ''
   renderPayerList()
 }
 
@@ -3155,10 +2894,7 @@ function renderPayerList() {
 
   list.innerHTML = state.payers.map((p, i) =>
     `<div class="payer-item">
-      <span class="payer-name">💳 ${escHtml(p.name)}
-        <span class="payer-nature-clickable" onclick="openNaturePicker('add',${i})">(${escHtml(normalizeDisplay(p.nature || '其他'))})</span>
-        ${p.remark ? `<span class="payer-remark">· ${escHtml(p.remark)}</span>` : ''}
-      </span>
+      <span class="payer-name">💳 ${escHtml(p.name)} <span style="font-size:11px;color:#888">(${escHtml(p.nature || '其他')})</span></span>
       <span class="payer-amount">¥${p.amount}</span>
       <span class="payer-del" onclick="removePayer(${i})">✕</span>
     </div>`
@@ -3283,11 +3019,7 @@ async function submitRecord() {
       }
     }
     if (content) {
-      const mr = migrateData(content)
-      content = mr.data
-      if (mr.changed) {
-        try { await saveDataSilent(content) } catch(e) { console.warn('migrateData save failed', e) }
-      }
+      content = migrateData(content)
       state.records = content.records || []
       state.members = content.members || {}
       state.pendingMembers = content.pendingMembers || []
@@ -3683,7 +3415,7 @@ function renderAdminList() {
     const creatorName = getUserDisplayName(r.submitterId)
     return `<div class="admin-record-item">
       <div class="admin-record-info">
-        <div class="admin-record-reason">${escHtml(normalizeDisplay(r.reason))}</div>
+        <div class="admin-record-reason">${escHtml(r.reason)}</div>
         <div class="admin-record-meta">${r.dinnerDate} · ${escHtml(r.location)} · ¥${(r.totalAmount||0).toFixed(2)}</div>
         <div class="admin-record-meta">创建人：${escHtml(creatorName)}</div>
         ${editInfo}
@@ -3933,7 +3665,6 @@ function toggleParticipantFromCheckbox(checkbox, type) {
   if (type === 'add') {
     renderParticipantTags()
   } else {
-    state.editHasChanges = true
     renderEditParticipantTags()
   }
 }
@@ -4094,7 +3825,7 @@ function renderStatsDetail() {
   list.innerHTML = records.map(rec => `
     <div class="stats-record-item">
       <div class="stats-record-info">
-        <div class="stats-record-reason">${escHtml(normalizeDisplay(rec.reason))}</div>
+        <div class="stats-record-reason">${escHtml(rec.reason)}</div>
         <div class="stats-record-meta">${rec.dinnerDate} · ${escHtml(rec.location)}</div>
       </div>
       <div class="stats-record-amount">¥${rec.totalAmount.toFixed(2)}</div>
@@ -4141,10 +3872,10 @@ function renderMemberStats() {
       memberData[payer.name].total += payer.amount
       // 优先使用 payer 自身的 nature（新数据），旧数据 fallback 到活动 reason
       const nature = (payer.nature || rec.reason || '').trim()
-      const normalizedNature = (nature === '慨慨宴请' || nature === '感恩常在' || nature === '慷慨宴请') ? '慷慨请客' : (nature === '获利回馈' ? '赢钱出翻' : nature)
-      if (normalizedNature === '慷慨请客') {
+      const normalizedNature = (nature === '慨慨宴请' || nature === '感恩常在') ? '慷慨宴请' : nature
+      if (normalizedNature === '获利回馈') {
         memberData[payer.name].hui += payer.amount
-      } else if (normalizedNature === '赢钱出翻') {
+      } else if (normalizedNature === '慷慨宴请') {
         memberData[payer.name].chang += payer.amount
       } else {
         memberData[payer.name].other += payer.amount
@@ -4189,8 +3920,8 @@ function renderMemberStats() {
           <div class="member-stat-bar-fill" style="width:${ratio}%"></div>
         </div>
         <div class="member-stat-breakdown">
-          <span class="member-stat-hui">慷慨请客：¥${data.hui.toFixed(2)} (${huiRatio}%)</span>
-          <span class="member-stat-chang">赢钱出翻：¥${data.chang.toFixed(2)} (${changRatio}%)</span>
+          <span class="member-stat-hui">获利回馈：¥${data.hui.toFixed(2)} (${huiRatio}%)</span>
+          <span class="member-stat-chang">慷慨宴请：¥${data.chang.toFixed(2)} (${changRatio}%)</span>
           <span style="color:#888">其他：¥${data.other.toFixed(2)} (${otherRatio}%)</span>
         </div>
       </div>
