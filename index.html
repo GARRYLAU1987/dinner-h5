@@ -1711,6 +1711,18 @@
   </div>
 </div>
 
+<!-- ===== 重名合并确认弹窗 ===== -->
+<div class="modal-overlay" id="mergeMemberModal">
+  <div class="modal-box">
+    <div class="modal-title">&#128260; &#21457;&#29616;&#21516;&#21517;&#25104;&#21592;</div>
+    <p id="mergeMemberModalContent" style="font-size:14px;color:#666;line-height:1.6"></p>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="rejectFromMergeModal()">&#25298;&#32477;&#30003;&#35831;</button>
+      <button class="btn-confirm" onclick="doMergeAndApprove()" style="background:var(--primary)">&#21512;&#24182;&#21040;&#24050;&#26377;&#36134;&#21495;</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== 通知弹窗 ===== -->
 <div class="modal-overlay" id="notificationModal">
   <div class="modal-box" style="max-height:80vh;overflow-y:auto">
@@ -3279,6 +3291,31 @@ function renderPendingMembers() {
 async function approveMember(userId) {
   const pendingName = (state.pendingNames || {})[userId] || ''
   const name = pendingName || '用户_' + userId.substr(-4)
+
+  // 检查是否已有同名已审核成员
+  let existingId = null
+  for (const [mid, m] of Object.entries(state.members || {})) {
+    if (m.approved && m.name === name && mid !== userId) {
+      existingId = mid
+      break
+    }
+  }
+
+  if (existingId) {
+    // 有重名，弹窗确认合并
+    state.mergeTargetNewId = userId
+    state.mergeTargetOldId = existingId
+    state.mergeTargetName = name
+    document.getElementById('mergeMemberModalContent').innerHTML =
+      '成员「<b>' + escHtml(name) + '</b>」已存在同名已审核账号。<br><br>' +
+      '已有账号 ID: <code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:4px">' + escHtml(existingId) + '</code><br>' +
+      '新申请 ID: <code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:4px">' + escHtml(userId) + '</code><br><br>' +
+      '选择「合并」将把旧账号的所有记录归属到新账号，并删除旧账号。'
+    document.getElementById('mergeMemberModal').classList.add('show')
+    return
+  }
+
+  // 无重名，正常通过
   state.members[userId] = {
     name: name,
     approved: true,
@@ -3292,6 +3329,73 @@ async function approveMember(userId) {
   const ok = await saveRecords()
   if (ok) {
     showToast('✅ 已批准 ' + name)
+    renderPendingMembers()
+    renderMembersList()
+  }
+}
+
+function closeMergeMemberModal() {
+  document.getElementById('mergeMemberModal').classList.remove('show')
+  state.mergeTargetNewId = null
+  state.mergeTargetOldId = null
+  state.mergeTargetName = null
+}
+
+async function rejectFromMergeModal() {
+  const userId = state.mergeTargetNewId
+  if (!userId) return
+  state.pendingMembers = state.pendingMembers.filter(id => id !== userId)
+  if (state.pendingNames) delete state.pendingNames[userId]
+  closeMergeMemberModal()
+  const ok = await saveRecords()
+  if (ok) {
+    showToast('已拒绝该成员')
+    renderPendingMembers()
+  }
+}
+
+async function doMergeAndApprove() {
+  const newId = state.mergeTargetNewId
+  const oldId = state.mergeTargetOldId
+  const name = state.mergeTargetName
+  if (!newId || !oldId || !name) return
+
+  // 1. 迁移旧ID的所有记录引用到新ID
+  for (const rec of state.records) {
+    if (rec.submitterId === oldId) {
+      rec.submitterId = newId
+      rec.submitterName = name
+    }
+    if (rec.lastEditorId === oldId) {
+      rec.lastEditorId = newId
+      rec.lastEditorName = name
+    }
+    for (const h of rec.editHistory || []) {
+      if (h.editorId === oldId) {
+        h.editorId = newId
+        h.editorName = name
+      }
+    }
+  }
+
+  // 2. 删除旧成员
+  delete state.members[oldId]
+
+  // 3. 通过新成员
+  state.members[newId] = {
+    name: name,
+    approved: true,
+    approvedBy: state.myId,
+    approvedAt: new Date().toISOString()
+  }
+  state.pendingMembers = state.pendingMembers.filter(id => id !== newId)
+  if (state.pendingNames) delete state.pendingNames[newId]
+
+  closeMergeMemberModal()
+
+  const ok = await saveRecords()
+  if (ok) {
+    showToast('✅ 已合并并批准 ' + name)
     renderPendingMembers()
     renderMembersList()
   }
