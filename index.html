@@ -1495,7 +1495,7 @@
       </div>
     </div>
     <div class="form-group">
-      <div class="form-label required">&#32467;&#36134;&#26126;&#32454;</div>
+      <div class="form-label required">&#36134;&#21333;&#25903;&#20184;&#26126;&#32454;</div>
       <div class="payer-list" id="editPayerList"></div>
       <div class="total-row" id="editTotalRow" style="display:none">
         <span class="total-label">&#21512;&#35745;&#37329;&#39069;</span>
@@ -2596,10 +2596,11 @@ function renderEditPayerList() {
   }
 
   list.innerHTML = state.editPayers.map((p, i) =>
-    `<div class="payer-item">
-      <span class="payer-name">💳 ${escHtml(p.name)} <span style="font-size:11px;color:#888;cursor:pointer" onclick="openNaturePicker('edit',${i})">(${escHtml(p.nature || '其他')})</span>${p.remark ? `<span style="font-size:11px;color:#aaa"> · ${escHtml(p.remark)}</span>` : ''}</span>
+    `<div class="payer-item" style="flex-wrap:wrap">
+      <span class="payer-name">💳 ${escHtml(p.name)} <span style="font-size:11px;color:#888;cursor:pointer" onclick="openNaturePicker('edit',${i})">(${escHtml(p.nature || '其他')})</span></span>
       <span class="payer-amount">¥${p.amount}</span>
       <span class="payer-del" onclick="editRemovePayer(${i})">✕</span>
+      <input type="text" class="form-input payer-remark-inline" placeholder="&#20184;&#27454;&#22791;&#27880;&#65288;&#21487;&#36873;&#65289;" value="${escHtml(p.remark || '')}" onchange="updateEditPayerRemark(${i}, this.value)" style="width:100%;margin-top:4px;font-size:12px;padding:4px 8px" maxlength="50">
     </div>`
   ).join('')
 
@@ -2611,6 +2612,12 @@ function renderEditPayerList() {
 function editRemovePayer(index) {
   state.editPayers.splice(index, 1)
   renderEditPayerList()
+}
+
+function updateEditPayerRemark(index, value) {
+  if (state.editPayers[index]) {
+    state.editPayers[index].remark = value.trim()
+  }
 }
 
 async function handleEditImages(event) {
