@@ -3944,6 +3944,9 @@ function toggleMemberStats() {
 function renderMemberStats() {
   const list = document.getElementById('memberStatsList')
 
+  // 只统计在成员管理名单中的已审核成员
+  const activeNames = getActiveMemberNames()
+
   // 收集每个成员的支付数据 + 参与次数
   const memberData = {}
   const totalRecords = state.records.length
@@ -3951,6 +3954,7 @@ function renderMemberStats() {
   for (const rec of state.records) {
     // 统计参与人员出现次数
     for (const participantName of (rec.participants || [])) {
+      if (!activeNames.has(participantName)) continue
       if (!memberData[participantName]) {
         memberData[participantName] = { total: 0, hui: 0, chang: 0, other: 0, joinCount: 0 }
       }
@@ -3960,6 +3964,7 @@ function renderMemberStats() {
     // 统计结账数据
     if (!rec.payers) continue
     for (const payer of rec.payers) {
+      if (!activeNames.has(payer.name)) continue
       if (!memberData[payer.name]) {
         memberData[payer.name] = { total: 0, hui: 0, chang: 0, other: 0, joinCount: 0 }
       }
