@@ -1410,7 +1410,7 @@
       <div class="form-label required">&#27963;&#21160;&#31867;&#21035;</div>
       <select class="form-input" id="inputReason" onchange="handleReasonChange(this)">
         <option value="">&#35831;&#36873;&#25321;&#31867;&#21035;</option>
-        <option value="慷慨宴请">慷慨宴请</option>
+        <option value="赢钱出翻">赢钱出翻</option>
         <option value="获利回馈">获利回馈</option>
         <option value="其他">其他</option>
       </select>
@@ -1456,8 +1456,8 @@
       <div class="input-row" style="margin-top:8px">
         <input class="form-input flex-1" id="inputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#25903;&#20184;&#20154;&#22995;&#21517;">
         <input class="form-input" id="inputPayerAmount" type="number" placeholder="&#37329;&#39069;" style="width:70px">
-        <div class="nature-toggle" id="addNatureToggle" data-value="慷慨宴请">
-          <span class="nature-option active" onclick="selectNature('add','慷慨宴请')">慷慨宴请</span>
+        <div class="nature-toggle" id="addNatureToggle" data-value="赢钱出翻">
+          <span class="nature-option active" onclick="selectNature('add','赢钱出翻')">赢钱出翻</span>
           <span class="nature-option" onclick="selectNature('add','获利回馈')">获利回馈</span>
         </div>
         <button class="btn-add" onclick="addPayer()">&#28155;&#21152;</button>
@@ -1494,7 +1494,7 @@
       <div class="form-label required">&#27963;&#21160;&#31867;&#21035;</div>
       <select class="form-input" id="editReason" onchange="handleEditReasonChange(this)">
         <option value="">请选择类别</option>
-        <option value="慷慨宴请">慷慨宴请</option>
+        <option value="赢钱出翻">赢钱出翻</option>
         <option value="获利回馈">获利回馈</option>
         <option value="其他">其他</option>
       </select>
@@ -1540,8 +1540,8 @@
       <div class="input-row" style="margin-top:8px">
         <input class="form-input flex-1" id="editInputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#25903;&#20184;&#20154;&#22995;&#21517;">
         <input class="form-input" id="editInputPayerAmount" type="number" placeholder="&#37329;&#39069;" style="width:70px">
-        <div class="nature-toggle" id="editNatureToggle" data-value="慷慨宴请">
-          <span class="nature-option active" onclick="selectNature('edit','慷慨宴请')">慷慨宴请</span>
+        <div class="nature-toggle" id="editNatureToggle" data-value="赢钱出翻">
+          <span class="nature-option active" onclick="selectNature('edit','赢钱出翻')">赢钱出翻</span>
           <span class="nature-option" onclick="selectNature('edit','获利回馈')">获利回馈</span>
         </div>
         <button class="btn-add" onclick="editAddPayer()">&#28155;&#21152;</button>
@@ -1799,7 +1799,8 @@ let state = {
   editImages: [],
   adminMode: false,
   dataSha: null,
-  uploadingImages: 0
+  uploadingImages: 0,
+  editHasChanges: false
 }
 
 // ============================================================
@@ -1900,7 +1901,7 @@ function migrateData(content) {
     // 兼容旧数据：修正错误编码和旧类别名称
     const r = (rec.reason || '').trim()
     if (r === '慨慨宴请' || r === '感恩常在') {
-      rec.reason = '慷慨宴请'
+      rec.reason = '赢钱出翻'
     }
 
     if (rec.submitterId && !content.members[rec.submitterId]) {
@@ -2254,12 +2255,16 @@ function selectNature(type, value) {
 // 点击已添加的支付人员性质进行切换
 function togglePayerNature(index, type) {
   const payers = type === 'add' ? state.payers : state.editPayers
-  const natures = ['慷慨宴请', '获利回馈']
+  const natures = ['赢钱出翻', '获利回馈']
   const current = payers[index].nature || '其他'
   const nextIndex = (natures.indexOf(current) + 1) % natures.length
   payers[index].nature = natures[nextIndex]
-  if (type === 'add') renderPayerList()
-  else renderEditPayerList()
+  if (type === 'add') {
+    renderPayerList()
+  } else {
+    state.editHasChanges = true
+    renderEditPayerList()
+  }
 }
 
 // 获取用户显示名称
@@ -2378,18 +2383,54 @@ function openDetail(id) {
   // 权限：所有已审核成员或管理员都可以编辑记录
   const canEdit = state.isApproved || state.isAdmin
 
-  // 底部创建者信息：如果是自己创建的，显示当前名字；否则显示成员列表中的名字
+
+  // 活动记录创建人信息
   const creatorName = record.submitterId === state.myId
     ? state.myName
     : getUserDisplayName(record.submitterId)
   const creatorIdShort = record.submitterId ? record.submitterId.substr(-4) : '----'
+  const creatorTag = record.submitterId === state.myId ? '<span style="color:var(--primary)">（我）</span>' : ''
+  const creatorInfoHtml = `
+    <div style="background:#f0fff4;border:1px solid #b7eb8f;border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      <span style="font-size:16px">👤</span>
+      <div style="flex:1">
+        <div style="font-size:12px;color:#52c41a;font-weight:600">活动记录创建人</div>
+        <div style="font-size:14px;color:#333">${escHtml(creatorName)}（ID:${creatorIdShort}）${creatorTag}</div>
+      </div>
+    </div>
+  `
 
   // 管理员修正创建者按钮（当创建者不是当前用户时）
   const fixCreatorBtn = (state.isAdmin && record.submitterId !== state.myId)
     ? `<button class="btn-edit-record" onclick="fixRecordCreator('${record.id}')" style="border-color:#27ae60;color:#27ae60;margin-bottom:8px;font-size:13px;padding:10px 0">
-        <span>📝 将创建者修正为「${escHtml(state.myName)}」</span>
+        <span>📝 修正创建者为「${escHtml(state.myName)}」</span>
       </button>`
     : ''
+
+  // 编辑成员列表（只统计实际提交了编辑的成员，去重）
+  const editorSet = new Set()
+  if (record.editHistory && record.editHistory.length > 0) {
+    for (const h of record.editHistory) {
+      if (h.editorId) editorSet.add(h.editorId)
+    }
+  }
+  // 排除创建者自己
+  if (record.submitterId) editorSet.delete(record.submitterId)
+  const editorIds = Array.from(editorSet)
+  let editorsHtml = ''
+  if (editorIds.length > 0) {
+    const editorTags = editorIds.map(eid => {
+      const ename = getUserDisplayName(eid)
+      const isMe = eid === state.myId
+      return `<span style="display:inline-block;background:#e6f7ff;border:1px solid #91d5ff;color:#1890ff;padding:2px 10px;border-radius:12px;font-size:12px;margin:2px">${escHtml(ename)}${isMe ? '<span style="color:var(--primary)">（我）</span>' : ''}</span>`
+    }).join('')
+    editorsHtml = `
+      <div style="background:#f0f7ff;border:1px solid #d6e4ff;border-radius:12px;padding:12px 16px;margin-bottom:12px">
+        <div style="font-size:12px;color:#1890ff;font-weight:600;margin-bottom:6px">✏️ 编辑成员（${editorIds.length}人）</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">${editorTags}</div>
+      </div>
+    `
+  }
 
   const editBtn = canEdit
     ? `<button class="btn-edit-record" onclick="startEditRecord('${record.id}')">
@@ -2410,6 +2451,8 @@ function openDetail(id) {
       <span class="detail-date">${record.dinnerDate}</span>
     </div>
 
+    ${creatorInfoHtml}
+    ${editorsHtml}
     ${fixCreatorBtn}
     ${editBtn}
 
@@ -2451,9 +2494,8 @@ function openDetail(id) {
     ${historySection}
     ${auditSection}
     <div class="detail-sub-text">
-      由 ${escHtml(creatorName)}（ID:${creatorIdShort}）创建于 ${record.createdAt || record.dinnerDate}
-      ${record.submitterId === state.myId ? '<span style="color:var(--primary)">（我）</span>' : ''}
-      ${record.lastEditTime ? '<br>最后由 ' + escHtml(getUserDisplayName(record.lastEditorId)) + ' 修改于 ' + record.lastEditTime : ''}
+      创建于 ${record.createdAt || record.dinnerDate}
+      ${record.lastEditTime ? ' · 最后修改：' + escHtml(getUserDisplayName(record.lastEditorId)) + ' ' + record.lastEditTime : ''}
     </div>
   `
 
@@ -2536,7 +2578,30 @@ function closeImgPreview() {
   document.getElementById('imgPreview').classList.remove('show')
 }
 
+function attachEditChangeListeners() {
+  // 给编辑页面的所有输入元素添加变化监听
+  const editInputs = ['editNote', 'editReason', 'editReasonCustom', 'editLocation', 'editDate', 'editInputParticipant', 'editInputPayerName', 'editInputPayerAmount', 'editInputPayerRemark']
+  editInputs.forEach(id => {
+    const el = document.getElementById(id)
+    if (el) {
+      el.oninput = () => { state.editHasChanges = true }
+      el.onchange = () => { state.editHasChanges = true }
+    }
+  })
+}
+
 function goBack() {
+  // 如果在编辑页面且有未保存的修改，提示确认
+  const editPage = document.getElementById('page-edit')
+  if (editPage && editPage.classList.contains('active') && state.editHasChanges) {
+    if (!confirm('您有未保存的修改，确定要退出吗？
+
+点击「确定」放弃修改并退出
+点击「取消」继续编辑')) {
+      return
+    }
+    state.editHasChanges = false
+  }
   switchTab('list')
 }
 
@@ -2561,12 +2626,12 @@ function startEditRecord(id) {
   // 设置备注
   document.getElementById('editNote').value = record.note || ''
 
-  // 设置事由选择（兼容旧数据：慨慨宴请/感恩常在 都映射为 慷慨宴请）
+  // 设置事由选择（兼容旧数据：慨慨宴请/感恩常在 都映射为 赢钱出翻）
   const reasonSelect = document.getElementById('editReason')
   const reasonCustom = document.getElementById('editReasonCustom')
   const rawReason = (record.reason || '').trim()
-  const normalizedReason = rawReason === '慨慨宴请' || rawReason === '感恩常在' ? '慷慨宴请' : rawReason
-  const predefinedReasons = ['慷慨宴请', '获利回馈', '其他']
+  const normalizedReason = rawReason === '慨慨宴请' || rawReason === '感恩常在' ? '赢钱出翻' : rawReason
+  const predefinedReasons = ['赢钱出翻', '获利回馈', '其他']
   if (predefinedReasons.includes(normalizedReason)) {
     reasonSelect.value = normalizedReason
     reasonCustom.style.display = 'none'
@@ -2583,7 +2648,11 @@ function startEditRecord(id) {
   renderEditImageGrid()
   renderMemberCheckboxLists()
   renderPayerMemberCheckboxLists()
-  selectNature('edit', '慷慨宴请')
+  selectNature('edit', '赢钱出翻')
+
+  state.editHasChanges = false
+  // 监听编辑页面输入变化
+  attachEditChangeListeners()
 
   switchToPage('edit')
   document.getElementById('navBack').classList.add('show')
@@ -2597,6 +2666,7 @@ function editAddParticipant() {
   if (state.editParticipants.includes(name)) { showToast('该人员已添加'); return }
   state.editParticipants.push(name)
   input.value = ''
+  state.editHasChanges = true
   renderEditParticipantTags()
 }
 
@@ -2609,13 +2679,14 @@ function renderEditParticipantTags() {
 
 function editRemoveParticipant(index) {
   state.editParticipants.splice(index, 1)
+  state.editHasChanges = true
   renderEditParticipantTags()
 }
 
 function editAddPayer() {
   const name = document.getElementById('editInputPayerName').value.trim()
   const amount = parseFloat(document.getElementById('editInputPayerAmount').value)
-  const nature = document.getElementById('editNatureToggle').getAttribute('data-value') || '慷慨宴请'
+  const nature = document.getElementById('editNatureToggle').getAttribute('data-value') || '赢钱出翻'
   const remark = document.getElementById('editInputPayerRemark').value.trim()
   if (!name) { showToast('请输入支付人姓名'); return }
   if (!amount || amount <= 0) { showToast('请输入有效金额'); return }
@@ -2624,6 +2695,7 @@ function editAddPayer() {
   document.getElementById('editInputPayerName').value = ''
   document.getElementById('editInputPayerAmount').value = ''
   document.getElementById('editInputPayerRemark').value = ''
+  state.editHasChanges = true
   renderEditPayerList()
 }
 
@@ -2656,6 +2728,7 @@ function renderEditPayerList() {
 
 function editRemovePayer(index) {
   state.editPayers.splice(index, 1)
+  state.editHasChanges = true
   renderEditPayerList()
 }
 
@@ -2684,6 +2757,7 @@ async function handleEditImages(event) {
   }
   const ind = document.getElementById('editUploadIndicator')
   if (ind) ind.remove()
+  state.editHasChanges = true
   renderEditImageGrid()
   event.target.value = ''
 }
@@ -2706,6 +2780,7 @@ function renderEditImageGrid() {
 
 function editRemoveImage(index) {
   state.editImages.splice(index, 1)
+  state.editHasChanges = true
   renderEditImageGrid()
 }
 
@@ -2820,6 +2895,7 @@ async function saveEditRecord() {
 
   const ok = await saveRecords()
   if (ok) {
+    state.editHasChanges = false
     showToast('✅ 修改已保存')
     setTimeout(() => openDetail(state.editRecordId), 800)
   }
@@ -2945,7 +3021,7 @@ function removeParticipant(index) {
 function addPayer() {
   const name = document.getElementById('inputPayerName').value.trim()
   const amount = parseFloat(document.getElementById('inputPayerAmount').value)
-  const nature = document.getElementById('addNatureToggle').getAttribute('data-value') || '慷慨宴请'
+  const nature = document.getElementById('addNatureToggle').getAttribute('data-value') || '赢钱出翻'
   const remark = document.getElementById('inputPayerRemark').value.trim()
   if (!name) { showToast('请输入支付人姓名'); return }
   if (!amount || amount <= 0) { showToast('请输入有效金额'); return }
@@ -3744,6 +3820,7 @@ function toggleParticipantFromCheckbox(checkbox, type) {
   if (type === 'add') {
     renderParticipantTags()
   } else {
+    state.editHasChanges = true
     renderEditParticipantTags()
   }
 }
@@ -3951,10 +4028,10 @@ function renderMemberStats() {
       memberData[payer.name].total += payer.amount
       // 优先使用 payer 自身的 nature（新数据），旧数据 fallback 到活动 reason
       const nature = (payer.nature || rec.reason || '').trim()
-      const normalizedNature = (nature === '慨慨宴请' || nature === '感恩常在') ? '慷慨宴请' : nature
+      const normalizedNature = (nature === '慨慨宴请' || nature === '感恩常在') ? '赢钱出翻' : nature
       if (normalizedNature === '获利回馈') {
         memberData[payer.name].hui += payer.amount
-      } else if (normalizedNature === '慷慨宴请') {
+      } else if (normalizedNature === '赢钱出翻') {
         memberData[payer.name].chang += payer.amount
       } else {
         memberData[payer.name].other += payer.amount
@@ -4000,7 +4077,7 @@ function renderMemberStats() {
         </div>
         <div class="member-stat-breakdown">
           <span class="member-stat-hui">获利回馈：¥${data.hui.toFixed(2)} (${huiRatio}%)</span>
-          <span class="member-stat-chang">慷慨宴请：¥${data.chang.toFixed(2)} (${changRatio}%)</span>
+          <span class="member-stat-chang">赢钱出翻：¥${data.chang.toFixed(2)} (${changRatio}%)</span>
           <span style="color:#888">其他：¥${data.other.toFixed(2)} (${otherRatio}%)</span>
         </div>
       </div>
