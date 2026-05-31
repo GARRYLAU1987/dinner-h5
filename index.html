@@ -167,6 +167,55 @@
     font-family: monospace;
   }
 
+  .pending-name-input {
+    width: 100%;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    background: #fafafa;
+    color: #333;
+    transition: border-color 0.2s;
+  }
+
+  .pending-name-input:focus {
+    border-color: var(--primary);
+    background: #fff;
+  }
+
+  .pending-name-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .pending-name-submit {
+    flex: 1;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .pending-name-cancel {
+    flex: 1;
+    background: #f5f5f5;
+    color: #999;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 0;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
   .pending-btn {
     background: linear-gradient(135deg, var(--primary), var(--primary-light));
     color: #fff;
@@ -1198,10 +1247,16 @@
   <div class="pending-title">等待管理员审核</div>
   <div class="pending-desc">
     您已成功扫码，但需要管理员审核通过后才能使用。<br>
-    请将下方用户 ID 发送给管理员申请加入。
+    请将下方用户 ID修改为你的名字方便管理员审核。
   </div>
   <div class="pending-id-box">
-    <div class="pending-id-label">我的用户 ID</div>
+    <div class="pending-id-label">我的名字（点击编辑）</div>
+    <input class="pending-name-input" id="pendingNameInput" type="text" placeholder="请输入你的名字" value="">
+    <div class="pending-name-btns" id="pendingNameBtns" style="display:none">
+      <button class="pending-name-submit" onclick="submitPendingName()">提交</button>
+      <button class="pending-name-cancel" onclick="cancelPendingName()">取消</button>
+    </div>
+    <div class="pending-id-label" style="margin-top:10px">我的用户 ID</div>
     <div class="pending-id-val" id="pendingIdDisplay">--</div>
   </div>
   <button class="pending-btn" onclick="refreshPendingStatus()">&#128260; 刷新状态</button>
@@ -1607,6 +1662,7 @@ let state = {
   records: [],
   members: {},        // { userId: { name, approved, approvedBy, approvedAt } }
   pendingMembers: [], // [userId, ...]
+  pendingNames: {},   // { userId: name } 待审核用户提交的名字
   auditLog: [],       // [{ action, targetId, targetReason, adminId, adminName, time, changes }]
   isAdmin: false,
   isApproved: false,
@@ -1716,6 +1772,7 @@ function migrateData(content) {
   if (!content.records) content.records = []
   if (!content.members) content.members = {}
   if (!content.pendingMembers) content.pendingMembers = []
+  if (!content.pendingNames) content.pendingNames = {}
   if (!content.auditLog) content.auditLog = []
 
   // 将现有记录的创建者自动转为已审核成员
@@ -1786,6 +1843,7 @@ async function loadRecords() {
     state.records = content.records || []
     state.members = content.members || {}
     state.pendingMembers = content.pendingMembers || []
+    state.pendingNames = content.pendingNames || {}
     state.auditLog = content.auditLog || []
 
     // 检查当前用户审核状态
@@ -1837,6 +1895,9 @@ function checkApprovalStatus() {
     // 新用户：加入待审核列表
     state.isApproved = false
     state.pendingMembers.push(state.myId)
+    // 同时保存用户提交的名字
+    if (!state.pendingNames) state.pendingNames = {}
+    if (state.myName) state.pendingNames[state.myId] = state.myName
     // 保存到云端
     saveDataSilent().then(() => {
       showPendingOverlay()
@@ -1848,7 +1909,43 @@ function checkApprovalStatus() {
 
 function showPendingOverlay() {
   document.getElementById('pendingIdDisplay').textContent = state.myId
+  const nameInput = document.getElementById('pendingNameInput')
+  nameInput.value = state.myName || ''
+  document.getElementById('pendingNameBtns').style.display = 'none'
   document.getElementById('pendingOverlay').classList.add('show')
+}
+
+function cancelPendingName() {
+  const nameInput = document.getElementById('pendingNameInput')
+  nameInput.value = state.myName || ''
+  document.getElementById('pendingNameBtns').style.display = 'none'
+}
+
+async function submitPendingName() {
+  const nameInput = document.getElementById('pendingNameInput')
+  const newName = nameInput.value.trim()
+  if (!newName) {
+    showToast('名字不能为空')
+    return
+  }
+
+  // 更新本地状态和 localStorage
+  state.myName = newName
+  localStorage.setItem(USER_NAME_KEY, newName)
+  document.getElementById('myNameDisplay').textContent = '用户名：' + newName
+
+  // 更新 pendingMembers 中的名字（pendingNames 对象）
+  if (!state.pendingNames) state.pendingNames = {}
+  state.pendingNames[state.myId] = newName
+
+  // 保存到云端
+  const ok = await saveDataSilent()
+  if (ok) {
+    document.getElementById('pendingNameBtns').style.display = 'none'
+    showToast('✅ 名字已提交，等待管理员审核')
+  } else {
+    showToast('❌ 提交失败，请重试')
+  }
 }
 
 function hidePendingOverlay() {
@@ -1880,6 +1977,7 @@ async function saveDataSilent() {
       records: state.records,
       members: state.members,
       pendingMembers: state.pendingMembers,
+      pendingNames: state.pendingNames || {},
       auditLog: state.auditLog,
       updatedAt: new Date().toISOString()
     })
@@ -1904,7 +2002,7 @@ async function saveDataSilent() {
 // 初始化数据文件
 async function initDataFile() {
   try {
-    const initJson = JSON.stringify({ records: [], members: {}, pendingMembers: [], auditLog: [], updatedAt: new Date().toISOString() })
+    const initJson = JSON.stringify({ records: [], members: {}, pendingMembers: [], pendingNames: {}, auditLog: [], updatedAt: new Date().toISOString() })
     const initBytes = new TextEncoder().encode(initJson)
     let initBinary = ''
     initBytes.forEach(b => initBinary += String.fromCharCode(b))
@@ -1931,6 +2029,7 @@ async function saveRecords() {
       records: state.records,
       members: state.members,
       pendingMembers: state.pendingMembers,
+      pendingNames: state.pendingNames || {},
       auditLog: state.auditLog,
       updatedAt: new Date().toISOString()
     })
@@ -1991,6 +2090,12 @@ function init() {
   })
   document.getElementById('editInputParticipant').addEventListener('keydown', e => {
     if (e.key === 'Enter') editAddParticipant()
+  })
+  document.getElementById('pendingNameInput').addEventListener('input', function() {
+    document.getElementById('pendingNameBtns').style.display = 'flex'
+  })
+  document.getElementById('pendingNameInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') submitPendingName()
   })
 }
 
@@ -2818,6 +2923,7 @@ async function submitRecord() {
       state.records = content.records || []
       state.members = content.members || {}
       state.pendingMembers = content.pendingMembers || []
+      state.pendingNames = content.pendingNames || {}
       state.auditLog = content.auditLog || []
     }
   } catch (e) {
@@ -2919,8 +3025,13 @@ function renderPendingMembers() {
   }
 
   list.innerHTML = pending.map(userId => {
+    const submittedName = (state.pendingNames || {})[userId] || ''
+    const nameDisplay = submittedName ? `<div style="font-size:14px;font-weight:600;color:var(--primary);margin-bottom:2px">${escHtml(submittedName)}</div>` : ''
     return `<div class="pending-member-item">
-      <span class="pending-member-id">${escHtml(userId)}</span>
+      <div style="flex:1">
+        ${nameDisplay}
+        <span class="pending-member-id">${escHtml(userId)}</span>
+      </div>
       <div class="pending-member-actions">
         <button class="btn-approve" onclick="approveMember('${userId}')">通过</button>
         <button class="btn-reject" onclick="rejectMember('${userId}')">拒绝</button>
@@ -2931,7 +3042,8 @@ function renderPendingMembers() {
 
 // 审核通过
 async function approveMember(userId) {
-  const name = '用户_' + userId.substr(-4)
+  const pendingName = (state.pendingNames || {})[userId] || ''
+  const name = pendingName || '用户_' + userId.substr(-4)
   state.members[userId] = {
     name: name,
     approved: true,
@@ -2939,6 +3051,8 @@ async function approveMember(userId) {
     approvedAt: new Date().toISOString()
   }
   state.pendingMembers = state.pendingMembers.filter(id => id !== userId)
+  // 清理该用户的待审核名字
+  if (state.pendingNames) delete state.pendingNames[userId]
 
   const ok = await saveRecords()
   if (ok) {
@@ -2951,6 +3065,7 @@ async function approveMember(userId) {
 // 拒绝审核
 async function rejectMember(userId) {
   state.pendingMembers = state.pendingMembers.filter(id => id !== userId)
+  if (state.pendingNames) delete state.pendingNames[userId]
   const ok = await saveRecords()
   if (ok) {
     showToast('已拒绝该成员')
@@ -3051,6 +3166,7 @@ async function confirmDeleteMember() {
 
   // 同时从待审核列表中移除（以防万一）
   state.pendingMembers = (state.pendingMembers || []).filter(id => id !== userId)
+  if (state.pendingNames) delete state.pendingNames[userId]
 
   const ok = await saveRecords()
   if (ok) {
