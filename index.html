@@ -1299,6 +1299,50 @@
     padding: 1px 6px;
     border-radius: 8px;
   }
+
+  /* 支付性质切换 */
+  .nature-toggle {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .nature-option {
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1.5px solid #e0e0e0;
+    color: #888;
+    background: #fafafa;
+    transition: all 0.2s;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .nature-option.active {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: #fff5f0;
+    font-weight: 600;
+  }
+  .payer-nature-clickable {
+    cursor: pointer;
+    color: var(--primary);
+    border-bottom: 1px dashed var(--primary-light);
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .payer-nature-clickable:active {
+    opacity: 0.7;
+  }
+  .payer-remark {
+    font-size: 11px;
+    color: #aaa;
+    margin-left: 4px;
+  }
+  .payer-remark-input {
+    width: 100%;
+    margin-top: 8px;
+  }
 </style>
 </head>
 <body>
@@ -1396,29 +1440,29 @@
       </div>
     </div>
     <div class="form-group">
-      <div class="form-label required">&#32467;&#36134;&#26126;&#32454;&#65288;&#25903;&#25345;&#22810;&#20154;&#32852;&#21512;&#65289;</div>
+      <div class="form-label required">&#25903;&#20184;&#20154;&#21592;&#26126;&#32454;&#65288;&#25903;&#25345;&#22810;&#20154;&#32852;&#21512;&#65289;</div>
       <div class="payer-list" id="payerList"></div>
       <div class="total-row" id="totalRow" style="display:none">
         <span class="total-label">&#21512;&#35745;&#37329;&#39069;</span>
         <span class="total-amount" id="totalDisplay">&#165;0</span>
       </div>
       <div class="member-select-toggle" onclick="togglePayerMemberSelect('add')">
-        <span>&#128101; &#28857;&#20987;&#36873;&#25321;&#32467;&#36134;&#25104;&#21592;</span>
+        <span>&#128101; &#28857;&#20987;&#36873;&#25321;&#25903;&#20184;&#25104;&#21592;</span>
         <span class="toggle-arrow" id="addPayerMemberToggleArrow">&#9660;</span>
       </div>
       <div class="member-select-panel" id="addPayerMemberSelectPanel" style="display:none">
         <div id="addPayerMemberCheckboxList"></div>
       </div>
       <div class="input-row" style="margin-top:8px">
-        <input class="form-input flex-1" id="inputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#32467;&#36134;&#20154;&#22995;&#21517;">
+        <input class="form-input flex-1" id="inputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#25903;&#20184;&#20154;&#22995;&#21517;">
         <input class="form-input" id="inputPayerAmount" type="number" placeholder="&#37329;&#39069;" style="width:70px">
-        <select class="form-input" id="inputPayerNature" style="width:85px;font-size:13px">
-          <option value="慷慨宴请">慷慨宴请</option>
-          <option value="获利回馈">获利回馈</option>
-          <option value="其他">其他</option>
-        </select>
+        <div class="nature-toggle" id="addNatureToggle" data-value="慷慨宴请">
+          <span class="nature-option active" onclick="selectNature('add','慷慨宴请')">慷慨宴请</span>
+          <span class="nature-option" onclick="selectNature('add','获利回馈')">获利回馈</span>
+        </div>
         <button class="btn-add" onclick="addPayer()">&#28155;&#21152;</button>
       </div>
+      <input class="form-input payer-remark-input" id="inputPayerRemark" placeholder="&#20184;&#27454;&#22791;&#27880;&#65288;&#21487;&#36873;&#65292;&#22914;&#37202;&#27700;&#12289;&#39184;&#36153;&#31561;&#65289;" maxlength="50">
     </div>
     <div class="form-group">
       <div class="form-label">&#20304;&#35777;&#22270;&#29255;&#65288;&#21487;&#36873;&#65289;</div>
@@ -1480,29 +1524,29 @@
       </div>
     </div>
     <div class="form-group">
-      <div class="form-label required">&#32467;&#36134;&#26126;&#32454;</div>
+      <div class="form-label required">&#25903;&#20184;&#20154;&#21592;&#26126;&#32454;</div>
       <div class="payer-list" id="editPayerList"></div>
       <div class="total-row" id="editTotalRow" style="display:none">
         <span class="total-label">&#21512;&#35745;&#37329;&#39069;</span>
         <span class="total-amount" id="editTotalDisplay">&#165;0</span>
       </div>
       <div class="member-select-toggle" onclick="togglePayerMemberSelect('edit')">
-        <span>&#128101; &#28857;&#20987;&#36873;&#25321;&#32467;&#36134;&#25104;&#21592;</span>
+        <span>&#128101; &#28857;&#20987;&#36873;&#25321;&#25903;&#20184;&#25104;&#21592;</span>
         <span class="toggle-arrow" id="editPayerMemberToggleArrow">&#9660;</span>
       </div>
       <div class="member-select-panel" id="editPayerMemberSelectPanel" style="display:none">
         <div id="editPayerMemberCheckboxList"></div>
       </div>
       <div class="input-row" style="margin-top:8px">
-        <input class="form-input flex-1" id="editInputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#32467;&#36134;&#20154;&#22995;&#21517;">
+        <input class="form-input flex-1" id="editInputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#25903;&#20184;&#20154;&#22995;&#21517;">
         <input class="form-input" id="editInputPayerAmount" type="number" placeholder="&#37329;&#39069;" style="width:70px">
-        <select class="form-input" id="editInputPayerNature" style="width:85px;font-size:13px">
-          <option value="慷慨宴请">慷慨宴请</option>
-          <option value="获利回馈">获利回馈</option>
-          <option value="其他">其他</option>
-        </select>
+        <div class="nature-toggle" id="editNatureToggle" data-value="慷慨宴请">
+          <span class="nature-option active" onclick="selectNature('edit','慷慨宴请')">慷慨宴请</span>
+          <span class="nature-option" onclick="selectNature('edit','获利回馈')">获利回馈</span>
+        </div>
         <button class="btn-add" onclick="editAddPayer()">&#28155;&#21152;</button>
       </div>
+      <input class="form-input payer-remark-input" id="editInputPayerRemark" placeholder="&#20184;&#27454;&#22791;&#27880;&#65288;&#21487;&#36873;&#65292;&#22914;&#37202;&#27700;&#12289;&#39184;&#36153;&#31561;&#65289;" maxlength="50">
     </div>
     <div class="form-group">
       <div class="form-label">&#20304;&#35777;&#22270;&#29255;&#65288;&#21487;&#36873;&#65289;</div>
@@ -2197,6 +2241,27 @@ function getNowStr() {
   return new Date().toLocaleString('zh-CN')
 }
 
+// 选择支付性质（toggle）
+function selectNature(type, value) {
+  const toggle = document.getElementById(type === 'add' ? 'addNatureToggle' : 'editNatureToggle')
+  if (!toggle) return
+  toggle.setAttribute('data-value', value)
+  toggle.querySelectorAll('.nature-option').forEach(opt => {
+    opt.classList.toggle('active', opt.textContent === value)
+  })
+}
+
+// 点击已添加的支付人员性质进行切换
+function togglePayerNature(index, type) {
+  const payers = type === 'add' ? state.payers : state.editPayers
+  const natures = ['慷慨宴请', '获利回馈']
+  const current = payers[index].nature || '其他'
+  const nextIndex = (natures.indexOf(current) + 1) % natures.length
+  payers[index].nature = natures[nextIndex]
+  if (type === 'add') renderPayerList()
+  else renderEditPayerList()
+}
+
 // 获取用户显示名称
 function getUserDisplayName(userId) {
   if (state.members[userId]) {
@@ -2281,7 +2346,10 @@ function openDetail(id) {
   const payers = record.payers || []
   const payerRows = payers.map(p =>
     `<div class="payer-detail-item">
-      <span class="payer-detail-name-v">💳 ${escHtml(p.name)} <span style="font-size:12px;color:#888">(${escHtml(p.nature || '其他')})</span></span>
+      <span class="payer-detail-name-v">💳 ${escHtml(p.name)}
+        <span style="font-size:12px;color:#888">(${escHtml(p.nature || '其他')})</span>
+        ${p.remark ? `<span style="font-size:12px;color:#aaa"> · ${escHtml(p.remark)}</span>` : ''}
+      </span>
       <span class="payer-detail-amt">¥${p.amount}</span>
     </div>`
   ).join('')
@@ -2370,7 +2438,7 @@ function openDetail(id) {
       <div class="detail-row">
         <span class="detail-icon">💳</span>
         <div class="detail-content">
-          <div class="detail-sub">结账明细</div>
+          <div class="detail-sub">支付人员明细</div>
           ${payerRows}
           <div class="total-line">
             <span class="total-line-label">合计</span>
@@ -2515,6 +2583,7 @@ function startEditRecord(id) {
   renderEditImageGrid()
   renderMemberCheckboxLists()
   renderPayerMemberCheckboxLists()
+  selectNature('edit', '慷慨宴请')
 
   switchToPage('edit')
   document.getElementById('navBack').classList.add('show')
@@ -2546,13 +2615,15 @@ function editRemoveParticipant(index) {
 function editAddPayer() {
   const name = document.getElementById('editInputPayerName').value.trim()
   const amount = parseFloat(document.getElementById('editInputPayerAmount').value)
-  const nature = document.getElementById('editInputPayerNature').value
-  if (!name) { showToast('请输入结账人姓名'); return }
+  const nature = document.getElementById('editNatureToggle').getAttribute('data-value') || '慷慨宴请'
+  const remark = document.getElementById('editInputPayerRemark').value.trim()
+  if (!name) { showToast('请输入支付人姓名'); return }
   if (!amount || amount <= 0) { showToast('请输入有效金额'); return }
-  if (state.editPayers.find(p => p.name === name)) { showToast('该结账人已添加'); return }
-  state.editPayers.push({ name, amount, nature })
+  if (state.editPayers.find(p => p.name === name)) { showToast('该支付人已添加'); return }
+  state.editPayers.push({ name, amount, nature, remark })
   document.getElementById('editInputPayerName').value = ''
   document.getElementById('editInputPayerAmount').value = ''
+  document.getElementById('editInputPayerRemark').value = ''
   renderEditPayerList()
 }
 
@@ -2569,7 +2640,10 @@ function renderEditPayerList() {
 
   list.innerHTML = state.editPayers.map((p, i) =>
     `<div class="payer-item">
-      <span class="payer-name">💳 ${escHtml(p.name)} <span style="font-size:11px;color:#888">(${escHtml(p.nature || '其他')})</span></span>
+      <span class="payer-name">💳 ${escHtml(p.name)}
+        <span class="payer-nature-clickable" onclick="togglePayerNature(${i},'edit')">(${escHtml(p.nature || '其他')})</span>
+        ${p.remark ? `<span class="payer-remark">· ${escHtml(p.remark)}</span>` : ''}
+      </span>
       <span class="payer-amount">¥${p.amount}</span>
       <span class="payer-del" onclick="editRemovePayer(${i})">✕</span>
     </div>`
@@ -2871,13 +2945,15 @@ function removeParticipant(index) {
 function addPayer() {
   const name = document.getElementById('inputPayerName').value.trim()
   const amount = parseFloat(document.getElementById('inputPayerAmount').value)
-  const nature = document.getElementById('inputPayerNature').value
-  if (!name) { showToast('请输入结账人姓名'); return }
+  const nature = document.getElementById('addNatureToggle').getAttribute('data-value') || '慷慨宴请'
+  const remark = document.getElementById('inputPayerRemark').value.trim()
+  if (!name) { showToast('请输入支付人姓名'); return }
   if (!amount || amount <= 0) { showToast('请输入有效金额'); return }
-  if (state.payers.find(p => p.name === name)) { showToast('该结账人已添加'); return }
-  state.payers.push({ name, amount, nature })
+  if (state.payers.find(p => p.name === name)) { showToast('该支付人已添加'); return }
+  state.payers.push({ name, amount, nature, remark })
   document.getElementById('inputPayerName').value = ''
   document.getElementById('inputPayerAmount').value = ''
+  document.getElementById('inputPayerRemark').value = ''
   renderPayerList()
 }
 
@@ -2894,7 +2970,10 @@ function renderPayerList() {
 
   list.innerHTML = state.payers.map((p, i) =>
     `<div class="payer-item">
-      <span class="payer-name">💳 ${escHtml(p.name)} <span style="font-size:11px;color:#888">(${escHtml(p.nature || '其他')})</span></span>
+      <span class="payer-name">💳 ${escHtml(p.name)}
+        <span class="payer-nature-clickable" onclick="togglePayerNature(${i},'add')">(${escHtml(p.nature || '其他')})</span>
+        ${p.remark ? `<span class="payer-remark">· ${escHtml(p.remark)}</span>` : ''}
+      </span>
       <span class="payer-amount">¥${p.amount}</span>
       <span class="payer-del" onclick="removePayer(${i})">✕</span>
     </div>`
