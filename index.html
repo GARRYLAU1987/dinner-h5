@@ -884,19 +884,33 @@
   .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #333; }
 
   /* 支付性质选择器 */
-  .nature-picker-option {
-    padding: 14px 20px;
-    font-size: 15px;
-    cursor: pointer;
-    border-bottom: 1px solid #f0f0f0;
-    transition: background 0.15s;
+  .nature-inline-panel {
     display: flex;
-    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f0f7ff;
+    border-radius: 10px;
+    margin: 4px 0 8px 28px;
+    flex-wrap: wrap;
   }
-  .nature-picker-option:last-of-type { border-bottom: none; }
-  .nature-picker-option:hover { background: #f5f5f5; }
-  .nature-picker-option:active { background: #e8e8e8; }
-  .nature-picker-option .nature-check { margin-left: auto; color: var(--primary); font-weight: bold; }
+  .nature-inline-option {
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 8px;
+    background: #fff;
+    color: #333;
+    border: 1px solid #e3f2fd;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .nature-inline-option:hover { background: #e3f2fd; }
+  .nature-inline-option:active { background: #bbdefb; }
+  .nature-inline-option.selected {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
 
   /* 付款备注输入框 */
   .payer-remark-input { font-size: 13px !important; color: #666; }
@@ -1444,8 +1458,14 @@
       <div class="input-row" style="margin-top:8px">
         <input class="form-input flex-1" id="inputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#32467;&#36134;&#20154;&#22995;&#21517;">
         <input class="form-input" id="inputPayerAmount" type="number" placeholder="&#37329;&#39069;" style="width:70px">
-        <input class="form-input" id="inputPayerNature" value="慷慨宴请" readonly onclick="openNaturePicker('add',-1)" style="width:85px;font-size:13px;cursor:pointer;background:#f8f8f8">
+        <span class="nature-select-badge" id="inputPayerNatureBadge" onclick="toggleNaturePanel('add','input')" style="padding:8px 10px">▼ <span id="inputPayerNatureText">慷慨宴请</span></span>
+        <input type="hidden" id="inputPayerNature" value="慷慨宴请">
         <button class="btn-add" onclick="addPayer()">&#28155;&#21152;</button>
+      </div>
+      <div class="nature-inline-panel" id="naturePanel_add_input" style="display:none;margin-left:0">
+        <span class="nature-inline-option" onclick="pickNatureForInput('add','赢钱请客')">🎆 赢钱请客</span>
+        <span class="nature-inline-option selected" onclick="pickNatureForInput('add','慷慨宴请')">🤝 慷慨宴请</span>
+        <span class="nature-inline-option" onclick="pickNatureForInput('add','其他')">📌 其他</span>
       </div>
       <input class="form-input" id="inputPayerRemark" placeholder="&#20184;&#27454;&#22791;&#27880;&#65288;&#21487;&#36873;&#65292;&#22914;&#37202;&#27700;&#12289;&#39184;&#36153;&#31561;&#65289;" style="margin-top:6px;font-size:13px" maxlength="50">
     </div>
@@ -1525,8 +1545,14 @@
       <div class="input-row" style="margin-top:8px">
         <input class="form-input flex-1" id="editInputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#32467;&#36134;&#20154;&#22995;&#21517;">
         <input class="form-input" id="editInputPayerAmount" type="number" placeholder="&#37329;&#39069;" style="width:70px">
-        <input class="form-input" id="editInputPayerNature" value="慷慨宴请" readonly onclick="openNaturePicker('edit',-1)" style="width:85px;font-size:13px;cursor:pointer;background:#f8f8f8">
+        <span class="nature-select-badge" id="editInputPayerNatureBadge" onclick="toggleNaturePanel('edit','input')" style="padding:8px 10px">▼ <span id="editInputPayerNatureText">慷慨宴请</span></span>
+        <input type="hidden" id="editInputPayerNature" value="慷慨宴请">
         <button class="btn-add" onclick="editAddPayer()">&#28155;&#21152;</button>
+      </div>
+      <div class="nature-inline-panel" id="naturePanel_edit_input" style="display:none;margin-left:0">
+        <span class="nature-inline-option" onclick="pickNatureForInput('edit','赢钱请客')">🎆 赢钱请客</span>
+        <span class="nature-inline-option selected" onclick="pickNatureForInput('edit','慷慨宴请')">🤝 慷慨宴请</span>
+        <span class="nature-inline-option" onclick="pickNatureForInput('edit','其他')">📌 其他</span>
       </div>
       <input class="form-input" id="editInputPayerRemark" placeholder="&#20184;&#27454;&#22791;&#27880;&#65288;&#21487;&#36873;&#65292;&#22914;&#37202;&#27700;&#12289;&#39184;&#36153;&#31561;&#65289;" style="margin-top:6px;font-size:13px" maxlength="50">
     </div>
@@ -1699,18 +1725,7 @@
 
 <!-- ===== 管理员验证弹窗 ===== -->
 
-<!-- ===== 支付性质选择器弹窗 ===== -->
-<div class="modal-overlay" id="naturePickerModal">
-  <div class="modal-box" style="padding:0;overflow:hidden">
-    <div class="modal-title" style="border-bottom:1px solid #eee">&#127922; &#36873;&#25321;&#25903;&#20184;&#24615;&#36136;</div>
-    <div class="nature-picker-option" onclick="pickNature('赢钱请客')" id="natureOption1">&#127878; &#33719;&#21033;&#22238;&#39304;</div>
-    <div class="nature-picker-option" onclick="pickNature('慷慨宴请')" id="natureOption2">&#129309; &#24974;&#27010;&#23478;&#35831;</div>
-    <div class="nature-picker-option" onclick="pickNature('其他')" id="natureOption3">&#128204; &#20854;&#20182;</div>
-    <div style="padding:8px 16px;border-top:1px solid #eee">
-      <button class="btn-cancel" onclick="closeNaturePicker()" style="width:100%">&#21462;&#28040;</button>
-    </div>
-  </div>
-</div>
+<!-- 支付性质内联选择器（动态生成） -->
 
 <!-- ===== 管理员验证弹窗（续） ===== -->
 <div class="modal-overlay" id="adminLoginModal">
@@ -2629,14 +2644,20 @@ function renderEditPayerList() {
     return
   }
 
-  list.innerHTML = state.editPayers.map((p, i) =>
-    `<div class="payer-item" style="flex-wrap:wrap">
-      <span class="payer-name">💳 ${escHtml(p.name)} <span class="nature-select-badge" onclick="openNaturePicker('edit',${i})">▼ ${escHtml(p.nature || '其他')}</span></span>
+  list.innerHTML = state.editPayers.map((p, i) => {
+    const naturePanel = `
+    <div class="nature-inline-panel" id="naturePanel_edit_${i}" style="display:none">
+      <span class="nature-inline-option ${p.nature === '赢钱请客' ? 'selected' : ''}" onclick="pickNatureInline('edit',${i},'赢钱请客')">🎆 赢钱请客</span>
+      <span class="nature-inline-option ${p.nature === '慷慨宴请' ? 'selected' : ''}" onclick="pickNatureInline('edit',${i},'慷慨宴请')">🤝 慷慨宴请</span>
+      <span class="nature-inline-option ${!p.nature || p.nature === '其他' ? 'selected' : ''}" onclick="pickNatureInline('edit',${i},'其他')">📌 其他</span>
+    </div>`
+    return `<div class="payer-item" style="flex-wrap:wrap">
+      <span class="payer-name">💳 ${escHtml(p.name)} <span class="nature-select-badge" onclick="toggleNaturePanel('edit',${i})">▼ ${escHtml(p.nature || '其他')}</span></span>
       <span class="payer-amount">¥${p.amount}</span>
       <span class="payer-del" onclick="editRemovePayer(${i})">✕</span>
       <input type="text" class="form-input payer-remark-inline" placeholder="&#20184;&#27454;&#22791;&#27880;&#65288;&#21487;&#36873;&#65289;" value="${escHtml(p.remark || '')}" onchange="updateEditPayerRemark(${i}, this.value)" style="width:100%;margin-top:4px;font-size:12px;padding:4px 8px" maxlength="50">
-    </div>`
-  ).join('')
+    </div>${naturePanel}`
+  }).join('')
 
   const total = state.editPayers.reduce((s, p) => s + p.amount, 0)
   totalDisplay.textContent = '¥' + total.toFixed(2)
@@ -2963,13 +2984,19 @@ function renderPayerList() {
     return
   }
 
-  list.innerHTML = state.payers.map((p, i) =>
-    `<div class="payer-item">
-      <span class="payer-name">💳 ${escHtml(p.name)} <span class="nature-select-badge" onclick="openNaturePicker('add',${i})">▼ ${escHtml(p.nature || '其他')}</span>${p.remark ? `<span style="font-size:11px;color:#aaa"> · ${escHtml(p.remark)}</span>` : ''}</span>
+  list.innerHTML = state.payers.map((p, i) => {
+    const naturePanel = `
+    <div class="nature-inline-panel" id="naturePanel_add_${i}" style="display:none">
+      <span class="nature-inline-option ${p.nature === '赢钱请客' ? 'selected' : ''}" onclick="pickNatureInline('add',${i},'赢钱请客')">🎆 赢钱请客</span>
+      <span class="nature-inline-option ${p.nature === '慷慨宴请' ? 'selected' : ''}" onclick="pickNatureInline('add',${i},'慷慨宴请')">🤝 慷慨宴请</span>
+      <span class="nature-inline-option ${!p.nature || p.nature === '其他' ? 'selected' : ''}" onclick="pickNatureInline('add',${i},'其他')">📌 其他</span>
+    </div>`
+    return `<div class="payer-item">
+      <span class="payer-name">💳 ${escHtml(p.name)} <span class="nature-select-badge" onclick="toggleNaturePanel('add',${i})">▼ ${escHtml(p.nature || '其他')}</span>${p.remark ? `<span style="font-size:11px;color:#aaa"> · ${escHtml(p.remark)}</span>` : ''}</span>
       <span class="payer-amount">¥${p.amount}</span>
       <span class="payer-del" onclick="removePayer(${i})">✕</span>
-    </div>`
-  ).join('')
+    </div>${naturePanel}`
+  }).join('')
 
   const total = state.payers.reduce((s, p) => s + p.amount, 0)
   totalDisplay.textContent = '¥' + total.toFixed(2)
@@ -2981,53 +3008,40 @@ function removePayer(index) {
   renderPayerList()
 }
 
-// ===== 支付性质选择器 =====
-let naturePickerTarget = { type: 'add', payerIndex: -1 }
-
-function openNaturePicker(type, payerIndex) {
-  naturePickerTarget = { type, payerIndex }
-  // 确定当前选中值
-  let currentNature = '慷慨宴请'
-  if (payerIndex >= 0) {
-    const payers = type === 'add' ? state.payers : state.editPayers
-    if (payers[payerIndex]) currentNature = payers[payerIndex].nature || '慷慨宴请'
-  } else {
-    const input = document.getElementById(type === 'add' ? 'inputPayerNature' : 'editInputPayerNature')
-    if (input) currentNature = input.value || '慷慨宴请'
-  }
-  // 更新选中标记
-  const options = { '赢钱请客': 'natureOption1', '慷慨宴请': 'natureOption2', '其他': 'natureOption3' }
-  for (const [key, id] of Object.entries(options)) {
-    const el = document.getElementById(id)
-    if (el) {
-      const isSelected = key === currentNature
-      el.innerHTML = el.innerHTML.replace(/ <span class="nature-check">✓<\/span>/g, '')
-      if (isSelected) el.innerHTML += ' <span class="nature-check">✓</span>'
-    }
-  }
-  document.getElementById('naturePickerModal').classList.add('show')
+// ===== 支付性质选择器（内联）=====
+function toggleNaturePanel(type, index) {
+  const panelId = `naturePanel_${type}_${index}`
+  const panel = document.getElementById(panelId)
+  if (!panel) return
+  const isHidden = panel.style.display === 'none'
+  // 关闭所有其他面板
+  document.querySelectorAll('.nature-inline-panel').forEach(p => { p.style.display = 'none' })
+  // 切换当前面板
+  panel.style.display = isHidden ? 'flex' : 'none'
 }
 
-function closeNaturePicker() {
-  document.getElementById('naturePickerModal').classList.remove('show')
+function pickNatureInline(type, index, nature) {
+  const payers = type === 'add' ? state.payers : state.editPayers
+  if (payers[index]) {
+    payers[index].nature = nature
+    if (type === 'add') renderPayerList()
+    else renderEditPayerList()
+  }
 }
 
-function pickNature(nature) {
-  const { type, payerIndex } = naturePickerTarget
-  if (payerIndex >= 0) {
-    // 修改已添加支付人的性质
-    const payers = type === 'add' ? state.payers : state.editPayers
-    if (payers[payerIndex]) {
-      payers[payerIndex].nature = nature
-      if (type === 'add') renderPayerList()
-      else renderEditPayerList()
-    }
-  } else {
-    // 设置输入框的值
-    const input = document.getElementById(type === 'add' ? 'inputPayerNature' : 'editInputPayerNature')
-    if (input) input.value = nature
-  }
-  closeNaturePicker()
+function pickNatureForInput(type, nature) {
+  const hiddenInput = document.getElementById(type === 'add' ? 'inputPayerNature' : 'editInputPayerNature')
+  const textSpan = document.getElementById(type === 'add' ? 'inputPayerNatureText' : 'editInputPayerNatureText')
+  const panel = document.getElementById(`naturePanel_${type}_input`)
+  if (hiddenInput) hiddenInput.value = nature
+  if (textSpan) textSpan.textContent = nature
+  if (panel) panel.style.display = 'none'
+  // 更新选中样式
+  const options = panel ? panel.querySelectorAll('.nature-inline-option') : []
+  options.forEach(opt => {
+    const optNature = opt.textContent.replace(/^[^\s]+\s/, '')
+    opt.classList.toggle('selected', optNature === nature)
+  })
 }
 
 async function handleImages(event) {
