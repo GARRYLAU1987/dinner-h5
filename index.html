@@ -1266,6 +1266,20 @@
   }
   .member-select-toggle:active { background: #e3f2fd; }
   .toggle-arrow { font-size: 10px; transition: transform 0.2s; }
+
+  /* ===== 支付性质选择样式 ===== */
+  .nature-select-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    background: #f0f7ff;
+    border-radius: 10px;
+    font-size: 12px;
+    color: #2196f3;
+    cursor: pointer;
+    margin-left: 4px;
+  }
+  .nature-select-badge:active { background: #e3f2fd; }
   .member-select-panel {
     background: #fafafa;
     border-radius: 10px;
@@ -2307,7 +2321,7 @@ function openDetail(id) {
   const payers = record.payers || []
   const payerRows = payers.map(p =>
     `<div class="payer-detail-item">
-      <span class="payer-detail-name-v">💳 ${escHtml(p.name)} <span style="font-size:12px;color:#888">(${escHtml(p.nature || '其他')})</span>${p.remark ? `<span style="font-size:12px;color:#aaa"> · ${escHtml(p.remark)}</span>` : ''}</span>
+      <span class="payer-detail-name-v">💳 ${escHtml(p.name)} <span class="nature-select-badge" style="cursor:default">${escHtml(p.nature || '其他')}</span>${p.remark ? `<span style="font-size:12px;color:#aaa"> · ${escHtml(p.remark)}</span>` : ''}</span>
       <span class="payer-detail-amt">¥${p.amount}</span>
     </div>`
   ).join('')
@@ -2617,7 +2631,7 @@ function renderEditPayerList() {
 
   list.innerHTML = state.editPayers.map((p, i) =>
     `<div class="payer-item" style="flex-wrap:wrap">
-      <span class="payer-name">💳 ${escHtml(p.name)} <span style="font-size:11px;color:#888;cursor:pointer" onclick="openNaturePicker('edit',${i})">(${escHtml(p.nature || '其他')})</span></span>
+      <span class="payer-name">💳 ${escHtml(p.name)} <span class="nature-select-badge" onclick="openNaturePicker('edit',${i})">▼ ${escHtml(p.nature || '其他')}</span></span>
       <span class="payer-amount">¥${p.amount}</span>
       <span class="payer-del" onclick="editRemovePayer(${i})">✕</span>
       <input type="text" class="form-input payer-remark-inline" placeholder="&#20184;&#27454;&#22791;&#27880;&#65288;&#21487;&#36873;&#65289;" value="${escHtml(p.remark || '')}" onchange="updateEditPayerRemark(${i}, this.value)" style="width:100%;margin-top:4px;font-size:12px;padding:4px 8px" maxlength="50">
@@ -2951,7 +2965,7 @@ function renderPayerList() {
 
   list.innerHTML = state.payers.map((p, i) =>
     `<div class="payer-item">
-      <span class="payer-name">💳 ${escHtml(p.name)} <span style="font-size:11px;color:#888;cursor:pointer" onclick="openNaturePicker('add',${i})">(${escHtml(p.nature || '其他')})</span>${p.remark ? `<span style="font-size:11px;color:#aaa"> · ${escHtml(p.remark)}</span>` : ''}</span>
+      <span class="payer-name">💳 ${escHtml(p.name)} <span class="nature-select-badge" onclick="openNaturePicker('add',${i})">▼ ${escHtml(p.nature || '其他')}</span>${p.remark ? `<span style="font-size:11px;color:#aaa"> · ${escHtml(p.remark)}</span>` : ''}</span>
       <span class="payer-amount">¥${p.amount}</span>
       <span class="payer-del" onclick="removePayer(${i})">✕</span>
     </div>`
