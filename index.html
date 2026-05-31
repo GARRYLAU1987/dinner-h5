@@ -2342,12 +2342,32 @@ function openDetail(id) {
     : getUserDisplayName(record.submitterId)
   const creatorIdShort = record.submitterId ? record.submitterId.substr(-4) : '----'
 
-  // 管理员修正创建者按钮（当创建者不是当前用户时）
-  const fixCreatorBtn = (state.isAdmin && record.submitterId !== state.myId)
-    ? `<button class="btn-edit-record" onclick="fixRecordCreator('${record.id}')" style="border-color:#27ae60;color:#27ae60;margin-bottom:8px;font-size:13px;padding:10px 0">
-        <span>📝 将创建者修正为「${escHtml(state.myName)}」</span>
-      </button>`
-    : ''
+  // 收集所有参与编辑的人（去重）
+  const editorIds = new Set()
+  if (record.editHistory) {
+    for (const h of record.editHistory) {
+      if (h.editorId) editorIds.add(h.editorId)
+    }
+  }
+  const editors = Array.from(editorIds).map(id => escHtml(getUserDisplayName(id))).join('、')
+
+  // 活动记录创建人 & 参与编辑人 信息展示
+  const recordInfoSection = `
+    <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:16px">👤</span>
+        <span style="font-size:13px;color:#888">活动记录创建人</span>
+      </div>
+      <div style="font-size:15px;color:#333;font-weight:500;padding-left:24px">${escHtml(creatorName)}（ID:${creatorIdShort}）${record.submitterId === state.myId ? '<span style="color:var(--primary)">（我）</span>' : ''}</div>
+      ${editors ? `
+      <div style="margin-top:10px;border-top:1px solid #f5f5f5;padding-top:10px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:16px">✏️</span>
+          <span style="font-size:13px;color:#888">参与编辑人</span>
+        </div>
+        <div style="font-size:15px;color:#333;font-weight:500;padding-left:24px">${editors}</div>
+      </div>` : ''}
+    </div>`
 
   const editBtn = canEdit
     ? `<button class="btn-edit-record" onclick="startEditRecord('${record.id}')">
@@ -2368,7 +2388,7 @@ function openDetail(id) {
       <span class="detail-date">${record.dinnerDate}</span>
     </div>
 
-    ${fixCreatorBtn}
+    ${recordInfoSection}
     ${editBtn}
 
     <div class="detail-card">
