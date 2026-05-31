@@ -1675,7 +1675,6 @@
 <div class="modal-overlay" id="adminLoginModal">
   <div class="modal-box">
     <div class="modal-title">&#128272; &#31649;&#29702;&#21592;&#39564;&#35777;</div>
-    <p style="font-size:13px;color:#999;margin-bottom:12px">&#40664;&#35748;&#23494;&#30721;&#65306;535172&#65288;&#37096;&#32626;&#21518;&#35831;&#20462;&#25913;&#65289;</p>
     <input class="form-input" id="adminPwdInput" type="password" placeholder="&#36755;&#20837;&#31649;&#29702;&#21592;&#23494;&#30721;">
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeAdminLogin()">&#21462;&#28040;</button>
@@ -3615,14 +3614,25 @@ function toggleMemberSelect(type) {
   }
 }
 
+// 获取当前已审核成员名列表（用于过滤已删除成员）
+function getActiveMemberNames() {
+  const names = new Set()
+  for (const member of Object.values(state.members)) {
+    if (member.approved) names.add(member.name)
+  }
+  return names
+}
+
 // 渲染成员勾选列表
 function renderMemberCheckboxLists() {
   const addList = document.getElementById('addMemberCheckboxList')
   const editList = document.getElementById('editMemberCheckboxList')
+  const activeNames = getActiveMemberNames()
   
   let html = ''
   for (const [id, member] of Object.entries(state.members)) {
     if (!member.approved) continue
+    if (!activeNames.has(member.name)) continue
     const checked = state.participants.includes(member.name) ? 'checked' : ''
     html += `<label class="member-checkbox-item">
       <input type="checkbox" value="${escHtml(member.name)}" ${checked} 
@@ -3636,6 +3646,7 @@ function renderMemberCheckboxLists() {
   html = ''
   for (const [id, member] of Object.entries(state.members)) {
     if (!member.approved) continue
+    if (!activeNames.has(member.name)) continue
     const checked = state.editParticipants.includes(member.name) ? 'checked' : ''
     html += `<label class="member-checkbox-item">
       <input type="checkbox" value="${escHtml(member.name)}" ${checked} 
@@ -3687,10 +3698,12 @@ function togglePayerMemberSelect(type) {
 function renderPayerMemberCheckboxLists() {
   const addList = document.getElementById('addPayerMemberCheckboxList')
   const editList = document.getElementById('editPayerMemberCheckboxList')
+  const activeNames = getActiveMemberNames()
 
   let html = ''
   for (const [id, member] of Object.entries(state.members)) {
     if (!member.approved) continue
+    if (!activeNames.has(member.name)) continue
     html += `<label class="member-checkbox-item">
       <input type="checkbox" value="${escHtml(member.name)}"
         onchange="togglePayerFromCheckbox(this, 'add')">
@@ -3703,6 +3716,7 @@ function renderPayerMemberCheckboxLists() {
   html = ''
   for (const [id, member] of Object.entries(state.members)) {
     if (!member.approved) continue
+    if (!activeNames.has(member.name)) continue
     html += `<label class="member-checkbox-item">
       <input type="checkbox" value="${escHtml(member.name)}"
         onchange="togglePayerFromCheckbox(this, 'edit')">
