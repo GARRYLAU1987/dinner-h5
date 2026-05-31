@@ -1300,29 +1300,30 @@
     border-radius: 8px;
   }
 
-  /* 支付性质切换 */
-  .nature-toggle {
-    display: flex;
-    gap: 4px;
-    flex-shrink: 0;
-  }
-  .nature-option {
+  /* 支付性质选择按钮 */
+  .nature-select-btn {
     padding: 8px 10px;
     border-radius: 8px;
     font-size: 12px;
     cursor: pointer;
-    border: 1.5px solid #e0e0e0;
-    color: #888;
-    background: #fafafa;
-    transition: all 0.2s;
-    white-space: nowrap;
-    user-select: none;
-  }
-  .nature-option.active {
-    border-color: var(--primary);
+    border: 1.5px solid var(--primary);
     color: var(--primary);
     background: #fff5f0;
-    font-weight: 600;
+    white-space: nowrap;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .nature-select-btn:active {
+    opacity: 0.8;
+    background: #ffe8dd;
+  }
+  .nature-select-btn .ns-arrow {
+    font-size: 10px;
+    opacity: 0.6;
   }
   .payer-nature-clickable {
     cursor: pointer;
@@ -1333,6 +1334,32 @@
   }
   .payer-nature-clickable:active {
     opacity: 0.7;
+  }
+  /* 支付性质弹出选择器 */
+  .nature-picker-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .nature-picker-item {
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 15px;
+    cursor: pointer;
+    border: 1.5px solid #eee;
+    text-align: center;
+    transition: all 0.15s;
+    color: #555;
+  }
+  .nature-picker-item:active {
+    background: #fff5f0;
+  }
+  .nature-picker-item.selected {
+    border-color: var(--primary);
+    background: #fff5f0;
+    color: var(--primary);
+    font-weight: 600;
   }
   .payer-remark {
     font-size: 11px;
@@ -1411,7 +1438,7 @@
       <select class="form-input" id="inputReason" onchange="handleReasonChange(this)">
         <option value="">&#35831;&#36873;&#25321;&#31867;&#21035;</option>
         <option value="赢钱出翻">赢钱出翻</option>
-        <option value="获利回馈">获利回馈</option>
+        <option value="慷慨请客">慷慨请客</option>
         <option value="其他">其他</option>
       </select>
       <input class="form-input" id="inputReasonCustom" placeholder="&#33258;&#23450;&#20041;&#31867;&#21035;&#65288;&#21487;&#36873;&#65289;" maxlength="50" style="margin-top:8px;display:none">
@@ -1456,9 +1483,8 @@
       <div class="input-row" style="margin-top:8px">
         <input class="form-input flex-1" id="inputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#25903;&#20184;&#20154;&#22995;&#21517;">
         <input class="form-input" id="inputPayerAmount" type="number" placeholder="&#37329;&#39069;" style="width:70px">
-        <div class="nature-toggle" id="addNatureToggle" data-value="赢钱出翻">
-          <span class="nature-option active" onclick="selectNature('add','赢钱出翻')">赢钱出翻</span>
-          <span class="nature-option" onclick="selectNature('add','获利回馈')">获利回馈</span>
+        <div class="nature-select-btn" id="addNatureToggle" data-value="赢钱出翻" onclick="openNaturePicker('add',null)">
+          <span>🎲 赢钱出翻</span><span class="ns-arrow">▼</span>
         </div>
         <button class="btn-add" onclick="addPayer()">&#28155;&#21152;</button>
       </div>
@@ -1495,7 +1521,7 @@
       <select class="form-input" id="editReason" onchange="handleEditReasonChange(this)">
         <option value="">请选择类别</option>
         <option value="赢钱出翻">赢钱出翻</option>
-        <option value="获利回馈">获利回馈</option>
+        <option value="慷慨请客">慷慨请客</option>
         <option value="其他">其他</option>
       </select>
       <input class="form-input" id="editReasonCustom" placeholder="&#33258;&#23450;&#20041;&#31867;&#21035;&#65288;&#21487;&#36873;&#65289;" maxlength="50" style="margin-top:8px;display:none">
@@ -1540,9 +1566,8 @@
       <div class="input-row" style="margin-top:8px">
         <input class="form-input flex-1" id="editInputPayerName" placeholder="&#25110;&#25163;&#21160;&#36755;&#20837;&#25903;&#20184;&#20154;&#22995;&#21517;">
         <input class="form-input" id="editInputPayerAmount" type="number" placeholder="&#37329;&#39069;" style="width:70px">
-        <div class="nature-toggle" id="editNatureToggle" data-value="赢钱出翻">
-          <span class="nature-option active" onclick="selectNature('edit','赢钱出翻')">赢钱出翻</span>
-          <span class="nature-option" onclick="selectNature('edit','获利回馈')">获利回馈</span>
+        <div class="nature-select-btn" id="editNatureToggle" data-value="赢钱出翻" onclick="openNaturePicker('edit',null)">
+          <span>🎲 赢钱出翻</span><span class="ns-arrow">▼</span>
         </div>
         <button class="btn-add" onclick="editAddPayer()">&#28155;&#21152;</button>
       </div>
@@ -1715,6 +1740,21 @@
   </div>
 </div>
 
+
+<!-- ===== 支付性质选择弹窗 ===== -->
+<div class="modal-overlay" id="naturePickerModal">
+  <div class="modal-box">
+    <div class="modal-title">选择支付性质</div>
+    <div class="nature-picker-options">
+      <div class="nature-picker-item" data-value="赢钱出翻" onclick="pickNature('赢钱出翻')">🎲 赢钱出翻</div>
+      <div class="nature-picker-item" data-value="慷慨请客" onclick="pickNature('慷慨请客')">🤝 慷慨请客</div>
+      <div class="nature-picker-item" data-value="其他" onclick="pickNature('其他')">📌 其他</div>
+    </div>
+    <div class="modal-footer" style="margin-top:8px">
+      <button class="btn-cancel" onclick="closeNaturePicker()">取消</button>
+    </div>
+  </div>
+</div>
 <!-- ===== 管理员验证弹窗 ===== -->
 <div class="modal-overlay" id="adminLoginModal">
   <div class="modal-box">
@@ -1800,7 +1840,8 @@ let state = {
   adminMode: false,
   dataSha: null,
   uploadingImages: 0,
-  editHasChanges: false
+  editHasChanges: false,
+  naturePickerContext: null
 }
 
 // ============================================================
@@ -1902,6 +1943,15 @@ function migrateData(content) {
     const r = (rec.reason || '').trim()
     if (r === '慨慨宴请' || r === '感恩常在') {
       rec.reason = '赢钱出翻'
+    }
+    if (r === '获利回馈') {
+      rec.reason = '慷慨请客'
+    }
+
+    // 迁移旧支付性质
+    for (const p of (rec.payers || [])) {
+      if (p.nature === '获利回馈') p.nature = '慷慨请客'
+      if (p.nature === '慨慨宴请' || p.nature === '感恩常在') p.nature = '赢钱出翻'
     }
 
     if (rec.submitterId && !content.members[rec.submitterId]) {
@@ -2242,29 +2292,61 @@ function getNowStr() {
   return new Date().toLocaleString('zh-CN')
 }
 
-// 选择支付性质（toggle）
+// 选择支付性质（更新按钮显示）
 function selectNature(type, value) {
-  const toggle = document.getElementById(type === 'add' ? 'addNatureToggle' : 'editNatureToggle')
-  if (!toggle) return
-  toggle.setAttribute('data-value', value)
-  toggle.querySelectorAll('.nature-option').forEach(opt => {
-    opt.classList.toggle('active', opt.textContent === value)
-  })
+  const btn = document.getElementById(type === 'add' ? 'addNatureToggle' : 'editNatureToggle')
+  if (!btn) return
+  btn.setAttribute('data-value', value)
+  const emoji = value === '赢钱出翻' ? '🎲' : value === '慷慨请客' ? '🤝' : '📌'
+  btn.innerHTML = `<span>${emoji} ${escHtml(value)}</span><span class="ns-arrow">▼</span>`
 }
 
-// 点击已添加的支付人员性质进行切换
-function togglePayerNature(index, type) {
-  const payers = type === 'add' ? state.payers : state.editPayers
-  const natures = ['赢钱出翻', '获利回馈']
-  const current = payers[index].nature || '其他'
-  const nextIndex = (natures.indexOf(current) + 1) % natures.length
-  payers[index].nature = natures[nextIndex]
-  if (type === 'add') {
-    renderPayerList()
+// 打开支付性质选择弹窗
+function openNaturePicker(type, payerIndex) {
+  state.naturePickerContext = { type, payerIndex }
+  // 确定当前选中的性质
+  let currentNature = '赢钱出翻'
+  if (payerIndex !== null && payerIndex !== undefined) {
+    const payers = type === 'add' ? state.payers : state.editPayers
+    currentNature = payers[payerIndex].nature || '其他'
   } else {
-    state.editHasChanges = true
-    renderEditPayerList()
+    const btn = document.getElementById(type === 'add' ? 'addNatureToggle' : 'editNatureToggle')
+    if (btn) currentNature = btn.getAttribute('data-value') || '赢钱出翻'
   }
+  // 高亮当前选中项
+  document.querySelectorAll('.nature-picker-item').forEach(item => {
+    item.classList.toggle('selected', item.getAttribute('data-value') === currentNature)
+  })
+  document.getElementById('naturePickerModal').classList.add('show')
+}
+
+// 关闭支付性质选择弹窗
+function closeNaturePicker() {
+  document.getElementById('naturePickerModal').classList.remove('show')
+  state.naturePickerContext = null
+}
+
+// 选择支付性质
+function pickNature(value) {
+  const ctx = state.naturePickerContext
+  if (!ctx) return
+
+  if (ctx.payerIndex !== null && ctx.payerIndex !== undefined) {
+    // 修改已添加的支付人员性质
+    const payers = ctx.type === 'add' ? state.payers : state.editPayers
+    payers[ctx.payerIndex].nature = value
+    if (ctx.type === 'add') {
+      renderPayerList()
+    } else {
+      state.editHasChanges = true
+      renderEditPayerList()
+    }
+  } else {
+    // 修改新增支付人员的默认性质
+    selectNature(ctx.type, value)
+  }
+
+  closeNaturePicker()
 }
 
 // 获取用户显示名称
@@ -2631,7 +2713,7 @@ function startEditRecord(id) {
   const reasonCustom = document.getElementById('editReasonCustom')
   const rawReason = (record.reason || '').trim()
   const normalizedReason = rawReason === '慨慨宴请' || rawReason === '感恩常在' ? '赢钱出翻' : rawReason
-  const predefinedReasons = ['赢钱出翻', '获利回馈', '其他']
+  const predefinedReasons = ['赢钱出翻', '慷慨请客', '其他']
   if (predefinedReasons.includes(normalizedReason)) {
     reasonSelect.value = normalizedReason
     reasonCustom.style.display = 'none'
@@ -2713,7 +2795,7 @@ function renderEditPayerList() {
   list.innerHTML = state.editPayers.map((p, i) =>
     `<div class="payer-item">
       <span class="payer-name">💳 ${escHtml(p.name)}
-        <span class="payer-nature-clickable" onclick="togglePayerNature(${i},'edit')">(${escHtml(p.nature || '其他')})</span>
+        <span class="payer-nature-clickable" onclick="openNaturePicker('edit',${i})">(${escHtml(p.nature || '其他')})</span>
         ${p.remark ? `<span class="payer-remark">· ${escHtml(p.remark)}</span>` : ''}
       </span>
       <span class="payer-amount">¥${p.amount}</span>
@@ -3047,7 +3129,7 @@ function renderPayerList() {
   list.innerHTML = state.payers.map((p, i) =>
     `<div class="payer-item">
       <span class="payer-name">💳 ${escHtml(p.name)}
-        <span class="payer-nature-clickable" onclick="togglePayerNature(${i},'add')">(${escHtml(p.nature || '其他')})</span>
+        <span class="payer-nature-clickable" onclick="openNaturePicker('add',${i})">(${escHtml(p.nature || '其他')})</span>
         ${p.remark ? `<span class="payer-remark">· ${escHtml(p.remark)}</span>` : ''}
       </span>
       <span class="payer-amount">¥${p.amount}</span>
@@ -4028,8 +4110,8 @@ function renderMemberStats() {
       memberData[payer.name].total += payer.amount
       // 优先使用 payer 自身的 nature（新数据），旧数据 fallback 到活动 reason
       const nature = (payer.nature || rec.reason || '').trim()
-      const normalizedNature = (nature === '慨慨宴请' || nature === '感恩常在') ? '赢钱出翻' : nature
-      if (normalizedNature === '获利回馈') {
+      const normalizedNature = (nature === '慨慨宴请' || nature === '感恩常在') ? '赢钱出翻' : (nature === '获利回馈' ? '慷慨请客' : nature)
+      if (normalizedNature === '慷慨请客') {
         memberData[payer.name].hui += payer.amount
       } else if (normalizedNature === '赢钱出翻') {
         memberData[payer.name].chang += payer.amount
@@ -4076,7 +4158,7 @@ function renderMemberStats() {
           <div class="member-stat-bar-fill" style="width:${ratio}%"></div>
         </div>
         <div class="member-stat-breakdown">
-          <span class="member-stat-hui">获利回馈：¥${data.hui.toFixed(2)} (${huiRatio}%)</span>
+          <span class="member-stat-hui">慷慨请客：¥${data.hui.toFixed(2)} (${huiRatio}%)</span>
           <span class="member-stat-chang">赢钱出翻：¥${data.chang.toFixed(2)} (${changRatio}%)</span>
           <span style="color:#888">其他：¥${data.other.toFixed(2)} (${otherRatio}%)</span>
         </div>
