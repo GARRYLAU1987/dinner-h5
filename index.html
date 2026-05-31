@@ -750,6 +750,21 @@
     flex-shrink: 0;
   }
 
+  .btn-delete-member {
+    background: #fff0ee;
+    color: #e74c3c;
+    border: 1px solid #f5c6cb;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    flex-shrink: 0;
+    margin-left: 6px;
+  }
+
+  .btn-delete-member:active { background: #e74c3c; color: #fff; }
+
   .admin-records-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   .admin-records-title { font-size: 15px; font-weight: 600; color: #333; }
   .admin-records-count { font-size: 12px; color: #999; }
@@ -1511,6 +1526,18 @@
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeDeleteModal()">&#21462;&#28040;</button>
       <button class="btn-confirm-danger" onclick="confirmDelete()">&#30830;&#35748;&#21024;&#38500;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 删除成员确认弹窗 ===== -->
+<div class="modal-overlay" id="deleteMemberModal">
+  <div class="modal-box">
+    <div class="modal-title">&#9888; &#30830;&#35748;&#21024;&#38500;&#25104;&#21592;</div>
+    <p id="deleteMemberModalContent" style="font-size:14px;color:#666;line-height:1.6"></p>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeDeleteMemberModal()">&#21462;&#28040;</button>
+      <button class="btn-confirm-danger" onclick="confirmDeleteMember()">&#30830;&#35748;&#21024;&#38500;</button>
     </div>
   </div>
 </div>
@@ -2945,6 +2972,7 @@ function renderMembersList() {
   list.innerHTML = memberIds.map(userId => {
     const m = state.members[userId]
     const isAdmin = getAdminIds().includes(userId)
+    const deleteBtn = isAdmin ? '' : `<button class="btn-delete-member" id="btn-del-${userId}" onclick="confirmDeleteMember('${userId}')">删除</button>`
     return `<div class="member-item" id="member-${userId}">
       <div class="member-name-display">
         <span id="name-text-${userId}">${escHtml(m.name)}</span>
@@ -2953,6 +2981,7 @@ function renderMembersList() {
       </div>
       <button class="btn-edit-name" id="btn-edit-${userId}" onclick="enableEditName('${userId}')">修改名字</button>
       <button class="btn-save-name" id="btn-save-${userId}" style="display:none" onclick="saveMemberName('${userId}')">保存</button>
+      ${deleteBtn}
     </div>`
   }).join('')
 }
@@ -2987,6 +3016,48 @@ async function saveMemberName(userId) {
   if (ok) {
     showToast('✅ 名字已更新')
     renderMembersList()
+  }
+}
+
+// 删除成员相关
+function confirmDeleteMember(userId) {
+  if (!state.isAdmin) {
+    showToast('❌ 仅管理员可删除成员')
+    return
+  }
+  const m = state.members[userId]
+  const isAdmin = getAdminIds().includes(userId)
+  if (isAdmin) {
+    showToast('❌ 不能删除管理员')
+    return
+  }
+  state.deleteMemberTargetId = userId
+  document.getElementById('deleteMemberModalContent').textContent = `确定删除成员「${m.name}」？删除后该成员将需要重新申请加入。`
+  document.getElementById('deleteMemberModal').classList.add('show')
+}
+
+function closeDeleteMemberModal() {
+  document.getElementById('deleteMemberModal').classList.remove('show')
+  state.deleteMemberTargetId = null
+}
+
+async function confirmDeleteMember() {
+  if (!state.deleteMemberTargetId) return
+  const userId = state.deleteMemberTargetId
+  const memberName = state.members[userId] ? state.members[userId].name : '未知'
+
+  // 从成员列表中删除
+  delete state.members[userId]
+
+  // 同时从待审核列表中移除（以防万一）
+  state.pendingMembers = (state.pendingMembers || []).filter(id => id !== userId)
+
+  const ok = await saveRecords()
+  if (ok) {
+    closeDeleteMemberModal()
+    renderMembersList()
+    renderPendingMembers()
+    showToast(`✅ 已删除成员「${memberName}」`)
   }
 }
 
