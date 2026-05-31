@@ -1590,15 +1590,6 @@
     </div>
   </div>
   
-  <div class="stats-filter">
-    <div class="filter-tabs">
-      <span class="filter-tab active" id="filterMonthTab" onclick="setStatsFilter('month')">&#26412;&#26376;</span>
-      <span class="filter-tab" id="filterYearTab" onclick="setStatsFilter('year')">&#26412;&#24180;</span>
-    </div>
-    <select class="stats-period-select" id="statsPeriodSelect" onchange="renderStatsDetail()">
-    </select>
-  </div>
-  
   <div class="member-stats-section">
     <div class="member-stats-title" onclick="toggleMemberStats()">
       <span>&#128101; &#25104;&#21592;&#25903;&#20986;&#32479;&#35745;</span>
@@ -1607,6 +1598,15 @@
     <div class="member-stats-content" id="memberStatsContent">
       <div id="memberStatsList"></div>
     </div>
+  </div>
+  
+  <div class="stats-filter">
+    <div class="filter-tabs">
+      <span class="filter-tab active" id="filterMonthTab" onclick="setStatsFilter('month')">&#26412;&#26376;</span>
+      <span class="filter-tab" id="filterYearTab" onclick="setStatsFilter('year')">&#26412;&#24180;</span>
+    </div>
+    <select class="stats-period-select" id="statsPeriodSelect" onchange="renderStatsDetail()">
+    </select>
   </div>
   
   <div class="stats-detail-section" id="statsDetailSection">
