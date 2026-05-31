@@ -1937,21 +1937,25 @@ function migrateData(content) {
   if (!content.notifications) content.notifications = []
   if (!content.auditLog) content.auditLog = []
 
+  let changed = false
+
   // 将现有记录的创建者自动转为已审核成员
   for (const rec of content.records) {
     // 兼容旧数据：修正错误编码和旧类别名称
     const r = (rec.reason || '').trim()
     if (r === '慨慨宴请' || r === '感恩常在' || r === '慷慨宴请') {
       rec.reason = '慷慨请客'
+      changed = true
     }
     if (r === '获利回馈') {
       rec.reason = '赢钱出翻'
+      changed = true
     }
 
     // 迁移旧支付性质
     for (const p of (rec.payers || [])) {
-      if (p.nature === '慷慨宴请' || p.nature === '感恩常在' || p.nature === '慷慨宴请') p.nature = '慷慨请客'
-      if (p.nature === '获利回馈') p.nature = '赢钱出翻'
+      if (p.nature === '慷慨宴请' || p.nature === '感恩常在' || p.nature === '慷慨宴请') { p.nature = '慷慨请客'; changed = true }
+      if (p.nature === '获利回馈') { p.nature = '赢钱出翻'; changed = true }
     }
 
     if (rec.submitterId && !content.members[rec.submitterId]) {
@@ -1961,6 +1965,7 @@ function migrateData(content) {
         approvedBy: 'system',
         approvedAt: rec.createdAt || new Date().toISOString()
       }
+      changed = true
     }
     // 同时迁移 editHistory 中的编辑者
     for (const h of (rec.editHistory || [])) {
@@ -1971,11 +1976,12 @@ function migrateData(content) {
           approvedBy: 'system',
           approvedAt: rec.createdAt || new Date().toISOString()
         }
+        changed = true
       }
     }
   }
 
-  return content
+  return { data: content, changed }
 }
 
 // ============================================================
@@ -2010,7 +2016,11 @@ async function loadRecords() {
       throw new Error('无法获取文件内容')
     }
 
-    content = migrateData(content)
+    const migrateResult = migrateData(content)
+    content = migrateResult.data
+    if (migrateResult.changed) {
+      try { await saveDataSilent(content) } catch(e) { console.warn('migrateData save failed', e) }
+    }
     state.records = content.records || []
     state.members = content.members || {}
     state.pendingMembers = content.pendingMembers || []
@@ -3253,7 +3263,11 @@ async function submitRecord() {
       }
     }
     if (content) {
-      content = migrateData(content)
+      const mr = migrateData(content)
+      content = mr.data
+      if (mr.changed) {
+        try { await saveDataSilent(content) } catch(e) { console.warn('migrateData save failed', e) }
+      }
       state.records = content.records || []
       state.members = content.members || {}
       state.pendingMembers = content.pendingMembers || []
