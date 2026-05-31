@@ -2676,10 +2676,7 @@ function goBack() {
   // 如果在编辑页面且有未保存的修改，提示确认
   const editPage = document.getElementById('page-edit')
   if (editPage && editPage.classList.contains('active') && state.editHasChanges) {
-    if (!confirm('您有未保存的修改，确定要退出吗？
-
-点击「确定」放弃修改并退出
-点击「取消」继续编辑')) {
+    if (!confirm('您有未保存的修改，确定要退出吗？\n\n点击「确定」放弃修改并退出\n点击「取消」继续编辑')) {
       return
     }
     state.editHasChanges = false
