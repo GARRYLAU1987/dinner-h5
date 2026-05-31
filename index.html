@@ -1592,7 +1592,7 @@
     <p id="deleteMemberModalContent" style="font-size:14px;color:#666;line-height:1.6"></p>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeDeleteMemberModal()">&#21462;&#28040;</button>
-      <button class="btn-confirm-danger" onclick="confirmDeleteMember()">&#30830;&#35748;&#21024;&#38500;</button>
+      <button class="btn-confirm-danger" onclick="doDeleteMember()">&#30830;&#35748;&#21024;&#38500;</button>
     </div>
   </div>
 </div>
@@ -3087,7 +3087,7 @@ function renderMembersList() {
   list.innerHTML = memberIds.map(userId => {
     const m = state.members[userId]
     const isAdmin = getAdminIds().includes(userId)
-    const deleteBtn = isAdmin ? '' : `<button class="btn-delete-member" id="btn-del-${userId}" onclick="confirmDeleteMember('${userId}')">删除</button>`
+    const deleteBtn = isAdmin ? '' : `<button class="btn-delete-member" id="btn-del-${userId}" onclick="showDeleteMemberModal('${userId}')">删除</button>`
     return `<div class="member-item" id="member-${userId}">
       <div class="member-name-display">
         <span id="name-text-${userId}">${escHtml(m.name)}</span>
@@ -3135,7 +3135,7 @@ async function saveMemberName(userId) {
 }
 
 // 删除成员相关
-function confirmDeleteMember(userId) {
+function showDeleteMemberModal(userId) {
   if (!state.isAdmin) {
     showToast('❌ 仅管理员可删除成员')
     return
@@ -3156,7 +3156,7 @@ function closeDeleteMemberModal() {
   state.deleteMemberTargetId = null
 }
 
-async function confirmDeleteMember() {
+async function doDeleteMember() {
   if (!state.deleteMemberTargetId) return
   const userId = state.deleteMemberTargetId
   const memberName = state.members[userId] ? state.members[userId].name : '未知'
