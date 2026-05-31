@@ -2094,8 +2094,8 @@ function openDetail(id) {
   const historySection = renderEditHistory(record)
   const auditSection = renderRecordAuditLog(record.id)
 
-  // 权限：只有管理员或创建者自己才能编辑
-  const canEdit = state.isAdmin || record.submitterId === state.myId
+  // 权限：所有已审核成员或管理员都可以编辑记录
+  const canEdit = state.isApproved || state.isAdmin
 
   // 底部创建者信息：如果是自己创建的，显示当前名字；否则显示成员列表中的名字
   const creatorName = record.submitterId === state.myId
@@ -2266,9 +2266,9 @@ function startEditRecord(id) {
   const record = state.records.find(r => r.id === id)
   if (!record) return
 
-  // 权限检查：非管理员只能编辑自己创建的记录
-  if (!state.isAdmin && record.submitterId !== state.myId) {
-    showToast('❌ 您只能编辑自己创建的记录')
+  // 权限检查：所有已审核成员都可以编辑记录
+  if (!state.isApproved && !state.isAdmin) {
+    showToast('❌ 需要完成审核后才能编辑记录')
     return
   }
 
@@ -2433,9 +2433,9 @@ async function saveEditRecord() {
   const record = state.records.find(r => r.id === state.editRecordId)
   if (!record) return
 
-  // 权限检查：非管理员只能保存自己创建的记录
-  if (!state.isAdmin && record.submitterId !== state.myId) {
-    showToast('❌ 您只能编辑自己创建的记录')
+  // 权限检查：所有已审核成员都可以编辑记录
+  if (!state.isApproved && !state.isAdmin) {
+    showToast('❌ 需要完成审核后才能保存修改')
     return
   }
 
@@ -2498,7 +2498,7 @@ async function saveEditRecord() {
   record.lastEditorName = state.myName
   record.lastEditTime = getNowStr()
 
-  // 如果是管理员编辑，记录审计日志
+  // 如果是管理员编辑他人记录，记录审计日志
   if (state.isAdmin && record.submitterId !== state.myId) {
     state.auditLog.unshift({
       action: 'edit',
@@ -2871,7 +2871,7 @@ function updateAdminPageUI() {
     card.className = 'admin-status-card not-admin'
     icon.textContent = '👤'
     title.textContent = '普通用户'
-    desc.textContent = '所有已审核用户都可以编辑记录，管理员可删除虚假记录'
+    desc.textContent = '所有已审核成员均可编辑任意记录，管理员可删除虚假记录'
     loginSection.style.display = 'block'
     recordsSection.style.display = 'none'
     pendingSection.style.display = 'none'
@@ -3457,15 +3457,24 @@ function toggleMemberStats() {
 function renderMemberStats() {
   const list = document.getElementById('memberStatsList')
 
-  // 收集每个成员的支付数据
+  // 收集每个成员的支付数据 + 参与次数
   const memberData = {}
+  const totalRecords = state.records.length
 
   for (const rec of state.records) {
-    if (!rec.payers) continue
+    // 统计参与人员出现次数
+    for (const participantName of (rec.participants || [])) {
+      if (!memberData[participantName]) {
+        memberData[participantName] = { total: 0, hui: 0, chang: 0, other: 0, joinCount: 0 }
+      }
+      memberData[participantName].joinCount++
+    }
 
+    // 统计结账数据
+    if (!rec.payers) continue
     for (const payer of rec.payers) {
       if (!memberData[payer.name]) {
-        memberData[payer.name] = { total: 0, hui: 0, chang: 0, other: 0 }
+        memberData[payer.name] = { total: 0, hui: 0, chang: 0, other: 0, joinCount: 0 }
       }
       memberData[payer.name].total += payer.amount
       // 优先使用 payer 自身的 nature（新数据），旧数据 fallback 到活动 reason
@@ -3481,11 +3490,14 @@ function renderMemberStats() {
     }
   }
 
-  // 计算总金额
+  // 计算总支出金额
   const total = Object.values(memberData).reduce((s, d) => s + d.total, 0)
 
-  // 按金额排序
-  const sorted = Object.entries(memberData).sort((a, b) => b[1].total - a[1].total)
+  // 按支出金额排序（无支出的按参与次数排）
+  const sorted = Object.entries(memberData).sort((a, b) => {
+    if (b[1].total !== a[1].total) return b[1].total - a[1].total
+    return b[1].joinCount - a[1].joinCount
+  })
 
   if (sorted.length === 0) {
     list.innerHTML = '<div style="text-align:center;color:#999;padding:20px">暂无支付数据</div>'
@@ -3497,6 +3509,9 @@ function renderMemberStats() {
     const huiRatio = data.total > 0 ? (data.hui / data.total * 100).toFixed(0) : '0'
     const changRatio = data.total > 0 ? (data.chang / data.total * 100).toFixed(0) : '0'
     const otherRatio = data.total > 0 ? (data.other / data.total * 100).toFixed(0) : '0'
+    const joinRate = totalRecords > 0 ? (data.joinCount / totalRecords * 100).toFixed(1) : '0'
+    const joinRateNum = parseFloat(joinRate)
+    const joinRateColor = joinRateNum >= 80 ? '#27ae60' : joinRateNum >= 50 ? '#e67e22' : '#e74c3c'
 
     return `
       <div class="member-stat-card">
@@ -3504,7 +3519,10 @@ function renderMemberStats() {
           <span class="member-stat-name">${escHtml(name)}</span>
           <span class="member-stat-total">¥${data.total.toFixed(2)}</span>
         </div>
-        <div class="member-stat-ratio">占比 ${ratio}%（总支出）</div>
+        <div class="member-stat-ratio" style="display:flex;gap:12px;align-items:center">
+          <span>占比 ${ratio}%（总支出）</span>
+          <span style="color:${joinRateColor};font-weight:600">参加率 ${joinRate}%（${data.joinCount}/${totalRecords}次）</span>
+        </div>
         <div class="member-stat-bar">
           <div class="member-stat-bar-fill" style="width:${ratio}%"></div>
         </div>
