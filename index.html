@@ -909,6 +909,68 @@
     font-family: inherit;
   }
 
+  /* ===== 通知条目 ===== */
+  .notif-item {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f0f0f0;
+    text-align: left;
+  }
+  .notif-item:last-child { border-bottom: none }
+  .notif-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .notif-item-actor {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--primary);
+  }
+  .notif-item-time {
+    font-size: 11px;
+    color: #aaa;
+  }
+  .notif-item-action {
+    font-size: 13px;
+    color: #333;
+    line-height: 1.5;
+  }
+  .notif-item-changes {
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+  }
+  .notif-badge {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    background: #e74c3c;
+    color: #fff;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(231,76,60,.4);
+    animation: notifPulse 1.5s infinite;
+  }
+  @keyframes notifPulse {
+    0%, 100% { transform: scale(1) }
+    50% { transform: scale(1.15) }
+  }
+  .notif-empty {
+    text-align: center;
+    color: #999;
+    padding: 30px 0;
+    font-size: 14px;
+  }
+
   /* ===== 成功弹窗 ===== */
   .success-modal-overlay {
     display: none;
@@ -1597,6 +1659,18 @@
   </div>
 </div>
 
+<!-- ===== 通知弹窗 ===== -->
+<div class="modal-overlay" id="notificationModal">
+  <div class="modal-box" style="max-height:80vh;overflow-y:auto">
+    <div class="modal-title">&#128276; &#26032;&#28040;&#24687;&#36890;&#30693;</div>
+    <div id="notificationList" style="max-height:55vh;overflow-y:auto"></div>
+    <div class="modal-footer" style="margin-top:12px">
+      <button class="btn-cancel" onclick="closeNotificationModal()">&#20851;&#38381;</button>
+      <button class="btn-confirm" onclick="markAllNotificationsRead()" style="background:#27ae60">&#20840;&#37096;&#24050;&#35835;</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== 管理员验证弹窗 ===== -->
 <div class="modal-overlay" id="adminLoginModal">
   <div class="modal-box">
@@ -1663,6 +1737,7 @@ let state = {
   members: {},        // { userId: { name, approved, approvedBy, approvedAt } }
   pendingMembers: [], // [userId, ...]
   pendingNames: {},   // { userId: name } 待审核用户提交的名字
+  notifications: [],  // [{ id, targetUserId, actorName, recordId, recordReason, action, changes, time, read }]
   auditLog: [],       // [{ action, targetId, targetReason, adminId, adminName, time, changes }]
   isAdmin: false,
   isApproved: false,
@@ -1773,6 +1848,7 @@ function migrateData(content) {
   if (!content.members) content.members = {}
   if (!content.pendingMembers) content.pendingMembers = []
   if (!content.pendingNames) content.pendingNames = {}
+  if (!content.notifications) content.notifications = []
   if (!content.auditLog) content.auditLog = []
 
   // 将现有记录的创建者自动转为已审核成员
@@ -1844,6 +1920,7 @@ async function loadRecords() {
     state.members = content.members || {}
     state.pendingMembers = content.pendingMembers || []
     state.pendingNames = content.pendingNames || {}
+    state.notifications = content.notifications || []
     state.auditLog = content.auditLog || []
 
     // 检查当前用户审核状态
@@ -1857,6 +1934,8 @@ async function loadRecords() {
       renderMembersList()
       renderAuditLog()
     }
+    // 检查是否有未读通知
+    checkNotifications()
   } catch (err) {
     if (err.message.includes('404')) {
       state.records = []
@@ -1978,6 +2057,7 @@ async function saveDataSilent() {
       members: state.members,
       pendingMembers: state.pendingMembers,
       pendingNames: state.pendingNames || {},
+      notifications: state.notifications || [],
       auditLog: state.auditLog,
       updatedAt: new Date().toISOString()
     })
@@ -2002,7 +2082,7 @@ async function saveDataSilent() {
 // 初始化数据文件
 async function initDataFile() {
   try {
-    const initJson = JSON.stringify({ records: [], members: {}, pendingMembers: [], pendingNames: {}, auditLog: [], updatedAt: new Date().toISOString() })
+    const initJson = JSON.stringify({ records: [], members: {}, pendingMembers: [], pendingNames: {}, notifications: [], auditLog: [], updatedAt: new Date().toISOString() })
     const initBytes = new TextEncoder().encode(initJson)
     let initBinary = ''
     initBytes.forEach(b => initBinary += String.fromCharCode(b))
@@ -2030,6 +2110,7 @@ async function saveRecords() {
       members: state.members,
       pendingMembers: state.pendingMembers,
       pendingNames: state.pendingNames || {},
+      notifications: state.notifications || [],
       auditLog: state.auditLog,
       updatedAt: new Date().toISOString()
     })
@@ -2645,6 +2726,24 @@ async function saveEditRecord() {
     if (state.auditLog.length > 50) state.auditLog = state.auditLog.slice(0, 50)
   }
 
+  // 通知原创建者：有人修改了你的记录
+  if (record.submitterId && record.submitterId !== state.myId) {
+    if (!state.notifications) state.notifications = []
+    state.notifications.unshift({
+      id: 'n_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      targetUserId: record.submitterId,
+      actorName: state.myName || '某成员',
+      recordId: record.id,
+      recordReason: record.reason,
+      action: 'edit',
+      changes: changeText,
+      time: getNowStr(),
+      read: false
+    })
+    // 限制通知数量
+    if (state.notifications.length > 100) state.notifications = state.notifications.slice(0, 100)
+  }
+
   const ok = await saveRecords()
   if (ok) {
     showToast('✅ 修改已保存')
@@ -2925,6 +3024,7 @@ async function submitRecord() {
       state.members = content.members || {}
       state.pendingMembers = content.pendingMembers || []
       state.pendingNames = content.pendingNames || {}
+      state.notifications = content.notifications || []
       state.auditLog = content.auditLog || []
     }
   } catch (e) {
@@ -3178,6 +3278,94 @@ async function doDeleteMember() {
   }
 }
 
+// ============================================================
+// 通知功能
+// ============================================================
+
+// 检查当前用户的未读通知
+function checkNotifications() {
+  if (!state.notifications) return
+  const myNotifs = state.notifications.filter(n => n.targetUserId === state.myId && !n.read)
+  if (myNotifs.length === 0) return
+
+  // 显示红点提醒
+  showNotifBadge(myNotifs.length)
+
+  // 延迟弹窗，等页面完全加载后
+  setTimeout(() => {
+    showNotificationModal(myNotifs)
+  }, 1500)
+}
+
+// 显示红点提醒
+function showNotifBadge(count) {
+  let badge = document.getElementById('notifBadge')
+  if (!badge) {
+    badge = document.createElement('div')
+    badge.id = 'notifBadge'
+    badge.className = 'notif-badge'
+    badge.onclick = () => showNotificationModal()
+    document.body.appendChild(badge)
+  }
+  badge.textContent = count > 9 ? '9+' : count
+  badge.style.display = 'flex'
+}
+
+// 隐藏红点
+function hideNotifBadge() {
+  const badge = document.getElementById('notifBadge')
+  if (badge) badge.style.display = 'none'
+}
+
+// 显示通知弹窗
+function showNotificationModal(notifs) {
+  if (!notifs) {
+    // 从全部通知中筛选当前用户的
+    notifs = (state.notifications || []).filter(n => n.targetUserId === state.myId && !n.read)
+  }
+
+  const listEl = document.getElementById('notificationList')
+  if (notifs.length === 0) {
+    listEl.innerHTML = '<div class="notif-empty">暂无新消息</div>'
+  } else {
+    listEl.innerHTML = notifs.map(n => {
+      const actionText = n.action === 'edit' ? '修改了你的记录' : '删除了你的记录'
+      const recordLabel = n.recordReason ? `「${escHtml(n.recordReason)}」` : ''
+      return `<div class="notif-item">
+        <div class="notif-item-header">
+          <span class="notif-item-actor">${escHtml(n.actorName)}</span>
+          <span class="notif-item-time">${escHtml(n.time)}</span>
+        </div>
+        <div class="notif-item-action">${actionText}${recordLabel}</div>
+        ${n.changes ? `<div class="notif-item-changes">${escHtml(n.changes)}</div>` : ''}
+      </div>`
+    }).join('')
+  }
+  document.getElementById('notificationModal').classList.add('show')
+}
+
+// 关闭通知弹窗
+function closeNotificationModal() {
+  document.getElementById('notificationModal').classList.remove('show')
+}
+
+// 标记所有通知为已读
+async function markAllNotificationsRead() {
+  if (!state.notifications) return
+  let changed = false
+  for (const n of state.notifications) {
+    if (n.targetUserId === state.myId && !n.read) {
+      n.read = true
+      changed = true
+    }
+  }
+  if (changed) {
+    await saveDataSilent()
+    hideNotifBadge()
+  }
+  closeNotificationModal()
+}
+
 // 渲染审计日志
 function renderAuditLog() {
   if (!state.isAdmin) return
@@ -3324,6 +3512,23 @@ async function confirmDelete() {
 
   const target = state.deleteTargetRecord
   const targetReason = target ? target.reason : '未知'
+
+  // 通知原创建者：有人删除了你的记录
+  if (target && target.submitterId && target.submitterId !== state.myId) {
+    if (!state.notifications) state.notifications = []
+    state.notifications.unshift({
+      id: 'n_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      targetUserId: target.submitterId,
+      actorName: state.myName || '管理员',
+      recordId: target.id,
+      recordReason: targetReason,
+      action: 'delete',
+      changes: '删除了整条记录',
+      time: getNowStr(),
+      read: false
+    })
+    if (state.notifications.length > 100) state.notifications = state.notifications.slice(0, 100)
+  }
 
   // 记录审计日志
   state.auditLog.unshift({
