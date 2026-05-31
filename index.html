@@ -1385,7 +1385,7 @@
       <select class="form-input" id="inputReason" onchange="handleReasonChange(this)">
         <option value="">&#35831;&#36873;&#25321;&#31867;&#21035;</option>
         <option value="慷慨宴请">慷慨宴请</option>
-        <option value="获利回馈">获利回馈</option>
+        <option value="赢钱请客">赢钱请客</option>
         <option value="其他">其他</option>
       </select>
       <input class="form-input" id="inputReasonCustom" placeholder="&#33258;&#23450;&#20041;&#31867;&#21035;&#65288;&#21487;&#36873;&#65289;" maxlength="50" style="margin-top:8px;display:none">
@@ -1466,7 +1466,7 @@
       <select class="form-input" id="editReason" onchange="handleEditReasonChange(this)">
         <option value="">请选择类别</option>
         <option value="慷慨宴请">慷慨宴请</option>
-        <option value="获利回馈">获利回馈</option>
+        <option value="赢钱请客">赢钱请客</option>
         <option value="其他">其他</option>
       </select>
       <input class="form-input" id="editReasonCustom" placeholder="&#33258;&#23450;&#20041;&#31867;&#21035;&#65288;&#21487;&#36873;&#65289;" maxlength="50" style="margin-top:8px;display:none">
@@ -1689,7 +1689,7 @@
 <div class="modal-overlay" id="naturePickerModal">
   <div class="modal-box" style="padding:0;overflow:hidden">
     <div class="modal-title" style="border-bottom:1px solid #eee">&#127922; &#36873;&#25321;&#25903;&#20184;&#24615;&#36136;</div>
-    <div class="nature-picker-option" onclick="pickNature('获利回馈')" id="natureOption1">&#127878; &#33719;&#21033;&#22238;&#39304;</div>
+    <div class="nature-picker-option" onclick="pickNature('赢钱请客')" id="natureOption1">&#127878; &#33719;&#21033;&#22238;&#39304;</div>
     <div class="nature-picker-option" onclick="pickNature('慷慨宴请')" id="natureOption2">&#129309; &#24974;&#27010;&#23478;&#35831;</div>
     <div class="nature-picker-option" onclick="pickNature('其他')" id="natureOption3">&#128204; &#20854;&#20182;</div>
     <div style="padding:8px 16px;border-top:1px solid #eee">
@@ -2524,7 +2524,7 @@ function startEditRecord(id) {
   const reasonCustom = document.getElementById('editReasonCustom')
   const rawReason = (record.reason || '').trim()
   const normalizedReason = rawReason === '慨慨宴请' || rawReason === '感恩常在' ? '慷慨宴请' : rawReason
-  const predefinedReasons = ['慷慨宴请', '获利回馈', '其他']
+  const predefinedReasons = ['慷慨宴请', '赢钱请客', '其他']
   if (predefinedReasons.includes(normalizedReason)) {
     reasonSelect.value = normalizedReason
     reasonCustom.style.display = 'none'
@@ -2962,7 +2962,7 @@ function openNaturePicker(type, payerIndex) {
     if (input) currentNature = input.value || '慷慨宴请'
   }
   // 更新选中标记
-  const options = { '获利回馈': 'natureOption1', '慷慨宴请': 'natureOption2', '其他': 'natureOption3' }
+  const options = { '赢钱请客': 'natureOption1', '慷慨宴请': 'natureOption2', '其他': 'natureOption3' }
   for (const [key, id] of Object.entries(options)) {
     const el = document.getElementById(id)
     if (el) {
@@ -3979,7 +3979,7 @@ function renderMemberStats() {
       // 优先使用 payer 自身的 nature（新数据），旧数据 fallback 到活动 reason
       const nature = (payer.nature || rec.reason || '').trim()
       const normalizedNature = (nature === '慨慨宴请' || nature === '感恩常在') ? '慷慨宴请' : nature
-      if (normalizedNature === '获利回馈') {
+      if (normalizedNature === '赢钱请客') {
         memberData[payer.name].hui += payer.amount
       } else if (normalizedNature === '慷慨宴请') {
         memberData[payer.name].chang += payer.amount
@@ -4026,7 +4026,7 @@ function renderMemberStats() {
           <div class="member-stat-bar-fill" style="width:${ratio}%"></div>
         </div>
         <div class="member-stat-breakdown">
-          <span class="member-stat-hui">获利回馈：¥${data.hui.toFixed(2)} (${huiRatio}%)</span>
+          <span class="member-stat-hui">赢钱请客：¥${data.hui.toFixed(2)} (${huiRatio}%)</span>
           <span class="member-stat-chang">慷慨宴请：¥${data.chang.toFixed(2)} (${changRatio}%)</span>
           <span style="color:#888">其他：¥${data.other.toFixed(2)} (${otherRatio}%)</span>
         </div>
