@@ -2399,7 +2399,7 @@ function openDetail(id) {
         <span style="font-size:16px">👤</span>
         <span style="font-size:13px;color:#888">活动记录创建人</span>
       </div>
-      <div style="font-size:15px;color:#333;font-weight:500;padding-left:24px">${escHtml(creatorName)}（ID:${creatorIdShort}）${record.submitterId === state.myId ? '<span style="color:var(--primary)">（我）</span>' : ''}</div>
+      <div style="font-size:15px;color:#333;font-weight:500;padding-left:24px">${escHtml(creatorName)}${record.submitterId === state.myId ? '<span style="color:var(--primary)">（我）</span>' : ''}</div>
       ${editors ? `
       <div style="margin-top:10px;border-top:1px solid #f5f5f5;padding-top:10px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -2470,7 +2470,7 @@ function openDetail(id) {
     ${historySection}
     ${auditSection}
     <div class="detail-sub-text">
-      由 ${escHtml(creatorName)}（ID:${creatorIdShort}）创建于 ${record.createdAt || record.dinnerDate}
+      由 ${escHtml(creatorName)} 创建于 ${record.createdAt || record.dinnerDate}
       ${record.submitterId === state.myId ? '<span style="color:var(--primary)">（我）</span>' : ''}
       ${record.lastEditTime ? '<br>最后由 ' + escHtml(getUserDisplayName(record.lastEditorId)) + ' 修改于 ' + record.lastEditTime : ''}
     </div>
