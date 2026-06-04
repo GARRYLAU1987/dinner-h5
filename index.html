@@ -2264,11 +2264,14 @@ function getNowStr() {
   return new Date().toLocaleString('zh-CN')
 }
 
-// 获取用户显示名称
-function getUserDisplayName(userId) {
+// 获取用户显示名称：优先用members里管理员改过的名字，再用快照名，最后用ID后缀
+function getUserDisplayName(userId, fallbackName) {
+  if (!userId) return fallbackName || '未知'
   if (state.members[userId]) {
     return state.members[userId].name
   }
+  // members里没有这个ID（可能已删除），用传入的快照名
+  if (fallbackName) return fallbackName
   return '用户_' + userId.substr(-4)
 }
 
@@ -2300,7 +2303,7 @@ function renderList() {
 
     let editBadge = ''
     if (r.lastEditTime) {
-      const editorName = getUserDisplayName(r.lastEditorId)
+      const editorName = getUserDisplayName(r.lastEditorId, r.lastEditorName)
       editBadge = `<div class="edit-badge">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
           <path d="M11.5 2.5L13.5 4.5L5 13H3V11L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -2377,10 +2380,10 @@ function openDetail(id) {
   // 权限：所有已审核成员或管理员都可以编辑记录
   const canEdit = state.isApproved || state.isAdmin
 
-  // 底部创建者信息：如果是自己创建的，显示当前名字；否则显示成员列表中的名字
+  // 底部创建者信息：优先用members里管理员改过的名字，再用记录快照名，最后才用ID后缀
   const creatorName = record.submitterId === state.myId
     ? state.myName
-    : getUserDisplayName(record.submitterId)
+    : (state.members[record.submitterId]?.name || record.submitterName || ('用户_' + (record.submitterId || '').substr(-4)))
   const creatorIdShort = record.submitterId ? record.submitterId.substr(-4) : '----'
 
   // 收集所有参与编辑的人（去重）
@@ -2390,7 +2393,12 @@ function openDetail(id) {
       if (h.editorId) editorIds.add(h.editorId)
     }
   }
-  const editors = Array.from(editorIds).map(id => escHtml(getUserDisplayName(id))).join('、')
+  // 收集编辑者名字时，同时从 editHistory 中取快照名作为兜底
+  const editorIdToName = {}
+  for (const h of record.editHistory || []) {
+    if (h.editorId) editorIdToName[h.editorId] = h.editorName || ''
+  }
+  const editors = Array.from(editorIds).map(id => escHtml(getUserDisplayName(id, editorIdToName[id]))).join('、')
 
   // 活动记录创建人 & 参与编辑人 信息展示
   const recordInfoSection = `
@@ -2472,7 +2480,7 @@ function openDetail(id) {
     <div class="detail-sub-text">
       由 ${escHtml(creatorName)} 创建于 ${record.createdAt || record.dinnerDate}
       ${record.submitterId === state.myId ? '<span style="color:var(--primary)">（我）</span>' : ''}
-      ${record.lastEditTime ? '<br>最后由 ' + escHtml(getUserDisplayName(record.lastEditorId)) + ' 修改于 ' + record.lastEditTime : ''}
+      ${record.lastEditTime ? '<br>最后由 ' + escHtml(getUserDisplayName(record.lastEditorId, record.lastEditorName)) + ' 修改于 ' + record.lastEditTime : ''}
     </div>
   `
 
@@ -2485,7 +2493,7 @@ function renderEditHistory(record) {
   if (!record.editHistory || record.editHistory.length === 0) return ''
 
   const historyItems = record.editHistory.map(h => {
-    const editorName = getUserDisplayName(h.editorId)
+    const editorName = getUserDisplayName(h.editorId, h.editorName)
     return `
     <div class="edit-history-item">
       <div class="edit-history-header">
@@ -3647,10 +3655,10 @@ function renderAdminList() {
     let editInfo = ''
     if (r.editHistory && r.editHistory.length > 0) {
       const lastEdit = r.editHistory[0]
-      const editorName = getUserDisplayName(lastEdit.editorId)
+      const editorName = getUserDisplayName(lastEdit.editorId, lastEdit.editorName)
       editInfo = `<div class="admin-record-meta">已修改 ${r.editHistory.length} 次，最后由 ${escHtml(editorName)} 修改</div>`
     }
-    const creatorName = getUserDisplayName(r.submitterId)
+    const creatorName = getUserDisplayName(r.submitterId, r.submitterName)
     return `<div class="admin-record-item">
       <div class="admin-record-info">
         <div class="admin-record-reason">${escHtml(r.reason)}</div>
