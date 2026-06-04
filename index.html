@@ -1926,25 +1926,9 @@ function migrateData(content) {
       rec.reason = '慷慨宴请'
     }
 
-    if (rec.submitterId && !content.members[rec.submitterId]) {
-      content.members[rec.submitterId] = {
-        name: rec.submitterName || '用户_' + rec.submitterId.substr(-4),
-        approved: true,
-        approvedBy: 'system',
-        approvedAt: rec.createdAt || new Date().toISOString()
-      }
-    }
-    // 同时迁移 editHistory 中的编辑者
-    for (const h of (rec.editHistory || [])) {
-      if (h.editorId && !content.members[h.editorId]) {
-        content.members[h.editorId] = {
-          name: h.editorName || '用户_' + h.editorId.substr(-4),
-          approved: true,
-          approvedBy: 'system',
-          approvedAt: rec.createdAt || new Date().toISOString()
-        }
-      }
-    }
+    // 注意：不再自动从记录中重建已删除的成员
+    // 如果记录的创建者/编辑者不在成员列表中，说明已被管理员删除（可能是换设备产生的重复账号已合并）
+    // 强制重建会导致删除后反复复活的问题
   }
 
   return content
@@ -4214,3 +4198,4 @@ window.addEventListener('DOMContentLoaded', init)
 </script>
 </body>
 </html>
+
