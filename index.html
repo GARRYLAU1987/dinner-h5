@@ -3678,7 +3678,7 @@ function closeAdminLogin() {
   document.getElementById('adminLoginModal').classList.remove('show')
 }
 
-function verifyAdmin() {
+async function verifyAdmin() {
   const pwd = document.getElementById('adminPwdInput').value
   if (pwd === ADMIN_PASSWORD) {
     state.isAdmin = true
@@ -3689,21 +3689,28 @@ function verifyAdmin() {
       localStorage.setItem(ADMIN_IDS_KEY, JSON.stringify(ids))
     }
 
+    // 管理员名字统一为 Garry
+    state.myName = 'Garry'
+    localStorage.setItem(USER_NAME_KEY, 'Garry')
+
     // 自动将当前管理员加入已审核成员
     if (!state.members[state.myId]) {
       state.members[state.myId] = {
-        name: state.myName,
+        name: 'Garry',
         approved: true,
         approvedBy: state.myId,
         approvedAt: new Date().toISOString()
       }
     } else {
       state.members[state.myId].approved = true
-      state.members[state.myId].name = state.myName
+      state.members[state.myId].name = 'Garry'
     }
-    state.pendingMembers = state.pendingMembers.filter(id => id !== state.myId)
+    state.pendingMembers = (state.pendingMembers || []).filter(id => id !== state.myId)
     state.isApproved = true
     hidePendingOverlay()
+
+    // 关键：保存到服务器，否则刷新后状态丢失
+    await saveRecords()
 
     closeAdminLogin()
     updateAdminPageUI()
@@ -4198,4 +4205,5 @@ window.addEventListener('DOMContentLoaded', init)
 </script>
 </body>
 </html>
+
 
