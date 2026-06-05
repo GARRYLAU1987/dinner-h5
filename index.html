@@ -1973,6 +1973,7 @@ async function loadRecords() {
     state.pendingNames = content.pendingNames || {}
     state.notifications = content.notifications || []
     state.auditLog = content.auditLog || []
+    state.adminIds = content.adminIds || []  // 服务器端管理员ID列表
 
     // 检查当前用户审核状态
     checkApprovalStatus()
@@ -2008,6 +2009,20 @@ async function loadRecords() {
 
 // 检查当前用户是否已审核
 function checkApprovalStatus() {
+  // 服务器端管理员身份校验：如果当前ID在服务器数据的 adminIds 列表中，自动恢复管理员身份
+  const serverAdminIds = state.adminIds || []
+  if (serverAdminIds.includes(state.myId)) {
+    state.isAdmin = true
+    state.isApproved = true
+    if (state.members[state.myId]) {
+      state.myName = state.members[state.myId].name
+    }
+    localStorage.setItem(ADMIN_KEY, 'true')
+    localStorage.setItem(USER_NAME_KEY, state.myName)
+    updateAdminPageUI()
+    return
+  }
+
   if (state.isAdmin) {
     state.isApproved = true
     return
@@ -2110,6 +2125,7 @@ async function saveDataSilent() {
       pendingNames: state.pendingNames || {},
       notifications: state.notifications || [],
       auditLog: state.auditLog,
+      adminIds: getAdminIds(),
       updatedAt: new Date().toISOString()
     })
     const utf8Bytes = new TextEncoder().encode(jsonText)
@@ -2163,6 +2179,7 @@ async function saveRecords() {
       pendingNames: state.pendingNames || {},
       notifications: state.notifications || [],
       auditLog: state.auditLog,
+      adminIds: getAdminIds(),
       updatedAt: new Date().toISOString()
     })
     const utf8Bytes = new TextEncoder().encode(jsonText)
@@ -2210,6 +2227,7 @@ function init() {
 
   const adminIds = getAdminIds()
   state.isAdmin = adminIds.includes(myId) || localStorage.getItem(ADMIN_KEY) === 'true'
+  // 注意：数据加载完成后会在 loadRecords 里做服务器端管理员身份校验
   updateAdminPageUI()
 
   // 异步加载数据
@@ -3164,6 +3182,7 @@ async function submitRecord() {
       state.pendingNames = content.pendingNames || {}
       state.notifications = content.notifications || []
       state.auditLog = content.auditLog || []
+      state.adminIds = content.adminIds || []
     }
   } catch (e) {
     // 忽略错误，使用内存中的数据
@@ -3680,20 +3699,74 @@ function closeAdminLogin() {
 
 async function verifyAdmin() {
   const pwd = document.getElementById('adminPwdInput').value
-  if (pwd === ADMIN_PASSWORD) {
-    state.isAdmin = true
-    localStorage.setItem(ADMIN_KEY, 'true')
-    const ids = getAdminIds()
-    if (!ids.includes(state.myId)) {
-      ids.push(state.myId)
-      localStorage.setItem(ADMIN_IDS_KEY, JSON.stringify(ids))
+  if (pwd !== ADMIN_PASSWORD) {
+    showToast('❌ 密码错误')
+    return
+  }
+
+  state.isAdmin = true
+  localStorage.setItem(ADMIN_KEY, 'true')
+  const ids = getAdminIds()
+  if (!ids.includes(state.myId)) {
+    ids.push(state.myId)
+    localStorage.setItem(ADMIN_IDS_KEY, JSON.stringify(ids))
+  }
+
+  // 查找已有的 Garry 成员（管理员主账号）
+  let existingGarryId = null
+  for (const [mid, m] of Object.entries(state.members || {})) {
+    if (m.name === 'Garry' && mid !== state.myId) {
+      existingGarryId = mid
+      break
+    }
+  }
+
+  if (existingGarryId) {
+    // 发现已有 Garry 账号 → 把当前新ID的所有引用合并回原账号
+    const oldId = state.myId
+    const newId = existingGarryId
+
+    // 迁移 records 中的引用
+    for (const r of (state.records || [])) {
+      if (r.submitterId === oldId) { r.submitterId = newId; r.submitterName = 'Garry' }
+      if (r.lastEditorId === oldId) { r.lastEditorId = newId; r.lastEditorName = 'Garry' }
+      for (const p of (r.payers || [])) {
+        if (p.userId === oldId) p.userId = newId
+      }
+      for (const h of (r.editHistory || [])) {
+        if (h.editorId === oldId) { h.editorId = newId; h.editorName = 'Garry' }
+      }
+    }
+    // 迁移 notifications
+    for (const n of (state.notifications || [])) {
+      if (n.targetUserId === oldId) n.targetUserId = newId
+    }
+    // 迁移 auditLog
+    for (const log of (state.auditLog || [])) {
+      if (log.userId === oldId) log.userId = newId
+      if (log.targetUserId === oldId) log.targetUserId = newId
+      if (log.adminId === oldId) { log.adminId = newId; log.adminName = 'Garry' }
+    }
+    // 迁移 members 中的 approvedBy
+    for (const [mid, m] of Object.entries(state.members || {})) {
+      if (m.approvedBy === oldId) m.approvedBy = newId
     }
 
-    // 管理员名字统一为 Garry
+    // 删除新ID的成员条目（如果有）
+    delete state.members[oldId]
+
+    // 把 state.myId 切换回原账号ID
+    state.myId = newId
+    localStorage.setItem(USER_ID_KEY, newId)
+
+    // 从待审核中移除
+    state.pendingMembers = (state.pendingMembers || []).filter(id => id !== oldId)
+    delete (state.pendingNames || {})[oldId]
+  } else {
+    // 没有已有 Garry 账号（首次）→ 直接将当前ID设为管理员
     state.myName = 'Garry'
     localStorage.setItem(USER_NAME_KEY, 'Garry')
 
-    // 自动将当前管理员加入已审核成员
     if (!state.members[state.myId]) {
       state.members[state.myId] = {
         name: 'Garry',
@@ -3706,22 +3779,26 @@ async function verifyAdmin() {
       state.members[state.myId].name = 'Garry'
     }
     state.pendingMembers = (state.pendingMembers || []).filter(id => id !== state.myId)
-    state.isApproved = true
-    hidePendingOverlay()
-
-    // 关键：保存到服务器，否则刷新后状态丢失
-    await saveRecords()
-
-    closeAdminLogin()
-    updateAdminPageUI()
-    renderAdminList()
-    renderPendingMembers()
-    renderMembersList()
-    renderAuditLog()
-    showToast('🎉 管理员验证成功！')
-  } else {
-    showToast('❌ 密码错误')
   }
+
+  state.myName = 'Garry'
+  state.isApproved = true
+  hidePendingOverlay()
+
+  // 保存到服务器
+  await saveRecords()
+
+  // 更新界面显示
+  document.getElementById('myIdDisplay').textContent = state.myId
+  document.getElementById('myNameDisplay').textContent = '用户名：Garry'
+
+  closeAdminLogin()
+  updateAdminPageUI()
+  renderAdminList()
+  renderPendingMembers()
+  renderMembersList()
+  renderAuditLog()
+  showToast('🎉 管理员验证成功！身份已恢复')
 }
 
 function confirmDeleteRecord(id, reason) {
@@ -4205,5 +4282,6 @@ window.addEventListener('DOMContentLoaded', init)
 </script>
 </body>
 </html>
+
 
 
