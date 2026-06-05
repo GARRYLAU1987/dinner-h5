@@ -240,6 +240,151 @@
   }
   .pending-admin-link:active { opacity: 1; }
 
+  /* ===== 找回账号 ===== */
+  .recover-link {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--primary);
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  }
+  .recover-link:active { opacity: 1; }
+  .recover-panel {
+    display: none;
+    margin-top: 16px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    width: 100%;
+    max-width: 320px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    text-align: left;
+  }
+  .recover-panel.show { display: block; }
+  .recover-panel label {
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .recover-select, .recover-pin-input {
+    width: 100%;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    background: #fafafa;
+    color: #333;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+  }
+  .recover-select:focus, .recover-pin-input:focus {
+    border-color: var(--primary);
+    background: #fff;
+  }
+  .recover-submit {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .recover-cancel {
+    width: 100%;
+    background: #f5f5f5;
+    color: #999;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 0;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 8px;
+  }
+
+  /* ===== 安全码设置弹窗 ===== */
+  .pin-setup-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .pin-setup-overlay.show { display: flex; }
+  .pin-setup-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 340px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  }
+  .pin-setup-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+  .pin-setup-desc {
+    font-size: 13px;
+    color: #999;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .pin-setup-input {
+    width: 100%;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 24px;
+    letter-spacing: 8px;
+    text-align: center;
+    font-family: monospace;
+    outline: none;
+    background: #fafafa;
+    color: #333;
+    box-sizing: border-box;
+  }
+  .pin-setup-input:focus {
+    border-color: var(--primary);
+    background: #fff;
+  }
+  .pin-setup-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .pin-setup-btns button {
+    flex: 1;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .pin-skip {
+    background: #f5f5f5;
+    color: #999;
+  }
+  .pin-confirm {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: #fff;
+  }
+
   /* ===== 统计头部 ===== */
   .stats-header {
     background: linear-gradient(135deg, var(--primary), var(--primary-light));
@@ -1369,6 +1514,30 @@
   </div>
   <button class="pending-btn" onclick="refreshPendingStatus()">&#128260; 刷新状态</button>
   <div class="pending-admin-link" onclick="showAdminLogin()">&#128272; 我是管理员，直接登录</div>
+  <div class="recover-link" onclick="toggleRecoverPanel()">&#128273; 找回已有账号</div>
+  <div class="recover-panel" id="recoverPanel">
+    <label>我是谁（选择你的名字）</label>
+    <select class="recover-select" id="recoverNameSelect">
+      <option value="">-- 请选择 --</option>
+    </select>
+    <label>安全码（4位数字）</label>
+    <input class="recover-pin-input" id="recoverPinInput" type="tel" maxlength="4" placeholder="请输入安全码" inputmode="numeric">
+    <button class="recover-submit" onclick="recoverAccount()">验证并恢复账号</button>
+    <button class="recover-cancel" onclick="toggleRecoverPanel()">取消</button>
+  </div>
+</div>
+
+<!-- 安全码设置弹窗 -->
+<div class="pin-setup-overlay" id="pinSetupOverlay">
+  <div class="pin-setup-box">
+    <div class="pin-setup-title">&#128274; 设置安全码</div>
+    <div class="pin-setup-desc">设置4位数字安全码，换设备或清除缓存后可用安全码找回账号，无需管理员重新审核。</div>
+    <input class="pin-setup-input" id="pinSetupInput" type="tel" maxlength="4" placeholder="····" inputmode="numeric">
+    <div class="pin-setup-btns">
+      <button class="pin-skip" onclick="skipPinSetup()">跳过</button>
+      <button class="pin-confirm" onclick="confirmPinSetup()">确认</button>
+    </div>
+  </div>
 </div>
 
 <!-- 顶部导航 -->
@@ -1591,6 +1760,7 @@
       <span class="copy-icon">&#128203;</span>
     </div>
     <div class="my-id-tip" id="myNameDisplay">&#29992;&#25143;&#21517;&#65306;--</div>
+    <div class="my-id-tip" id="myPinStatus" style="cursor:pointer" onclick="showPinSetup()"></div>
   </div>
 
   <!-- 管理员专属：待审核成员 -->
@@ -2009,7 +2179,7 @@ async function loadRecords() {
 
 // 检查当前用户是否已审核
 function checkApprovalStatus() {
-  // 服务器端管理员身份校验：如果当前ID在服务器数据的 adminIds 列表中，自动恢复管理员身份
+  // 服务器端管理员身份校验
   const serverAdminIds = state.adminIds || []
   if (serverAdminIds.includes(state.myId)) {
     state.isAdmin = true
@@ -2020,11 +2190,13 @@ function checkApprovalStatus() {
     localStorage.setItem(ADMIN_KEY, 'true')
     localStorage.setItem(USER_NAME_KEY, state.myName)
     updateAdminPageUI()
+    updatePinStatus()
     return
   }
 
   if (state.isAdmin) {
     state.isApproved = true
+    updatePinStatus()
     return
   }
 
@@ -2033,6 +2205,11 @@ function checkApprovalStatus() {
     state.isApproved = true
     state.myName = member.name
     document.getElementById('myNameDisplay').textContent = '用户名：' + member.name
+    updatePinStatus()
+    // 如果还没有设置安全码，提示设置
+    if (!member.pin && member.name !== '管理员 Mac端') {
+      setTimeout(() => showPinSetup(), 500)
+    }
   } else if (state.pendingMembers.includes(state.myId)) {
     state.isApproved = false
     showPendingOverlay()
@@ -2049,6 +2226,23 @@ function checkApprovalStatus() {
     }).catch(() => {
       showPendingOverlay()
     })
+  }
+}
+
+function updatePinStatus() {
+  const el = document.getElementById('myPinStatus')
+  if (!el) return
+  const member = state.members[state.myId]
+  if (!member || !member.approved) {
+    el.textContent = ''
+    return
+  }
+  if (member.pin) {
+    el.innerHTML = '🔒 安全码已设置'
+    el.style.color = '#52c41a'
+  } else {
+    el.innerHTML = '⚠️ 点击设置安全码'
+    el.style.color = '#faad14'
   }
 }
 
@@ -2107,6 +2301,162 @@ async function refreshPendingStatus() {
   } else {
     showToast('尚未审核通过，请耐心等待')
   }
+}
+
+// ===== 找回账号 =====
+function toggleRecoverPanel() {
+  const panel = document.getElementById('recoverPanel')
+  const isOpen = panel.classList.contains('show')
+  if (isOpen) {
+    panel.classList.remove('show')
+    return
+  }
+  // 填充已审核成员列表
+  const select = document.getElementById('recoverNameSelect')
+  select.innerHTML = '<option value="">-- 请选择 --</option>'
+  for (const [mid, m] of Object.entries(state.members || {})) {
+    if (m.approved && m.name !== '管理员 Mac端') {
+      const opt = document.createElement('option')
+      opt.value = mid
+      opt.textContent = m.name
+      select.appendChild(opt)
+    }
+  }
+  document.getElementById('recoverPinInput').value = ''
+  panel.classList.add('show')
+}
+
+async function recoverAccount() {
+  const targetId = document.getElementById('recoverNameSelect').value
+  const pin = document.getElementById('recoverPinInput').value.trim()
+
+  if (!targetId) {
+    showToast('请选择你的名字')
+    return
+  }
+  if (!pin || pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+    showToast('请输入4位数字安全码')
+    return
+  }
+
+  const targetMember = state.members[targetId]
+  if (!targetMember) {
+    showToast('成员不存在')
+    return
+  }
+
+  // 验证安全码
+  if (!targetMember.pin) {
+    showToast('该成员尚未设置安全码，请联系管理员')
+    return
+  }
+  if (targetMember.pin !== pin) {
+    showToast('安全码错误')
+    return
+  }
+
+  // 验证通过 → 合并当前新ID到原账号
+  const oldId = state.myId
+  const newName = targetMember.name
+
+  // 迁移 records 中的引用
+  for (const r of (state.records || [])) {
+    if (r.submitterId === oldId) { r.submitterId = targetId; r.submitterName = newName }
+    if (r.lastEditorId === oldId) { r.lastEditorId = targetId; r.lastEditorName = newName }
+    for (const p of (r.payers || [])) {
+      if (p.userId === oldId) p.userId = targetId
+    }
+    for (const h of (r.editHistory || [])) {
+      if (h.editorId === oldId) { h.editorId = targetId; h.editorName = newName }
+    }
+  }
+  for (const n of (state.notifications || [])) {
+    if (n.targetUserId === oldId) n.targetUserId = targetId
+  }
+  for (const log of (state.auditLog || [])) {
+    if (log.userId === oldId) log.userId = targetId
+    if (log.targetUserId === oldId) log.targetUserId = targetId
+    if (log.adminId === oldId) { log.adminId = targetId; log.adminName = newName }
+  }
+  for (const [mid, m] of Object.entries(state.members || {})) {
+    if (m.approvedBy === oldId) m.approvedBy = targetId
+  }
+
+  // 删除新ID的成员条目
+  delete state.members[oldId]
+  // 从待审核中移除
+  state.pendingMembers = (state.pendingMembers || []).filter(id => id !== oldId)
+  delete (state.pendingNames || {})[oldId]
+
+  // 切换回原账号ID
+  state.myId = targetId
+  state.myName = newName
+  state.isApproved = true
+  state.isAdmin = (state.adminIds || []).includes(targetId)
+  localStorage.setItem(USER_ID_KEY, targetId)
+  localStorage.setItem(USER_NAME_KEY, newName)
+  if (state.isAdmin) {
+    localStorage.setItem(ADMIN_KEY, 'true')
+    const ids = getAdminIds()
+    if (!ids.includes(targetId)) {
+      ids.push(targetId)
+      localStorage.setItem(ADMIN_IDS_KEY, JSON.stringify(ids))
+    }
+  }
+
+  hidePendingOverlay()
+
+  // 保存到服务器
+  const ok = await saveRecords()
+  if (ok) {
+    document.getElementById('myIdDisplay').textContent = state.myId
+    document.getElementById('myNameDisplay').textContent = '用户名：' + newName
+    updateAdminPageUI()
+    renderList()
+    showToast('🎉 账号恢复成功！欢迎回来，' + newName)
+  } else {
+    showToast('❌ 保存失败，请重试')
+  }
+}
+
+// ===== 安全码设置 =====
+function showPinSetup() {
+  const member = state.members[state.myId]
+  const desc = document.querySelector('.pin-setup-desc')
+  if (member?.pin) {
+    desc.textContent = '重新设置4位数字安全码。修改后请牢记新安全码。'
+  } else {
+    desc.textContent = '设置4位数字安全码，换设备或清除缓存后可用安全码找回账号，无需管理员重新审核。'
+  }
+  document.getElementById('pinSetupInput').value = ''
+  document.getElementById('pinSetupOverlay').classList.add('show')
+  setTimeout(() => document.getElementById('pinSetupInput').focus(), 100)
+}
+
+async function confirmPinSetup() {
+  const pin = document.getElementById('pinSetupInput').value.trim()
+  if (!pin || pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+    showToast('请输入4位数字')
+    return
+  }
+
+  // 保存安全码到成员数据
+  if (state.members[state.myId]) {
+    state.members[state.myId].pin = pin
+  }
+  document.getElementById('pinSetupOverlay').classList.remove('show')
+  const ok = await saveRecords()
+  if (ok) {
+    showToast('✅ 安全码设置成功')
+    updatePinStatus()
+    renderMembersList()
+  } else {
+    showToast('❌ 保存失败，请重试')
+  }
+}
+
+function skipPinSetup() {
+  document.getElementById('pinSetupOverlay').classList.remove('show')
 }
 
 // 静默保存（不显示loading）
@@ -2246,6 +2596,20 @@ function init() {
   })
   document.getElementById('pendingNameInput').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') submitPendingName()
+  })
+
+  // 安全码输入只允许数字
+  document.getElementById('pinSetupInput').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').substr(0, 4)
+  })
+  document.getElementById('pinSetupInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') confirmPinSetup()
+  })
+  document.getElementById('recoverPinInput').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').substr(0, 4)
+  })
+  document.getElementById('recoverPinInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') recoverAccount()
   })
 }
 
@@ -3437,11 +3801,13 @@ function renderMembersList() {
   list.innerHTML = memberIds.map(userId => {
     const m = state.members[userId]
     const isAdmin = getAdminIds().includes(userId)
+    const hasPin = m.pin ? '✅' : '❌'
     const deleteBtn = isAdmin ? '' : `<button class="btn-delete-member" id="btn-del-${userId}" onclick="showDeleteMemberModal('${userId}')">删除</button>`
     return `<div class="member-item" id="member-${userId}">
       <div class="member-name-display">
         <span id="name-text-${userId}">${escHtml(m.name)}</span>
         ${isAdmin ? '<span class="name-badge">管理员</span>' : ''}
+        <span style="font-size:11px;color:#aaa;margin-left:6px">安全码:${hasPin}</span>
         <div class="member-id-small">${escHtml(userId)}</div>
       </div>
       <button class="btn-edit-name" id="btn-edit-${userId}" onclick="enableEditName('${userId}')">修改名字</button>
@@ -3799,6 +4165,10 @@ async function verifyAdmin() {
   renderMembersList()
   renderAuditLog()
   showToast('🎉 管理员验证成功！身份已恢复')
+  // 管理员也提示设置安全码（如果没有）
+  if (!state.members[state.myId]?.pin) {
+    setTimeout(() => showPinSetup(), 800)
+  }
 }
 
 function confirmDeleteRecord(id, reason) {
@@ -4282,6 +4652,7 @@ window.addEventListener('DOMContentLoaded', init)
 </script>
 </body>
 </html>
+
 
 
 
