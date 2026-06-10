@@ -486,6 +486,25 @@
 
   .btn-edit-record:active { background: #fff5f0; }
 
+  .btn-delete-record {
+    width: 100%;
+    background: #fff;
+    color: #e74c3c;
+    border: 2px solid #e74c3c;
+    border-radius: 28px;
+    padding: 14px 0;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .btn-delete-record:active { background: #fff0ee; }
+
   /* ===== 详情页面 ===== */
   .detail-header {
     background: linear-gradient(135deg, var(--primary), var(--primary-light));
@@ -2422,6 +2441,17 @@ function openDetail(id) {
       </button>`
     : ''
 
+  // 管理员专属：删除记录按钮
+  const deleteBtn = state.isAdmin
+    ? `<button class="btn-delete-record" onclick="confirmDeleteRecord('${record.id}','${escHtml(record.reason)}')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M2 4H14M5.33 4V2.67C5.33 2.3 5.63 2 6 2H10C10.37 2 10.67 2.3 10.67 2.67V4M12.67 4V13.33C12.67 13.7 12.37 14 12 14H4C3.63 14 3.33 13.7 3.33 13.33V4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6.67 7V11M9.33 7V11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        删除此记录
+      </button>`
+    : ''
+
   // 主标题：备注优先，无备注则显示类别
   const detailTitle = record.note || record.reason
 
@@ -2434,6 +2464,7 @@ function openDetail(id) {
 
     ${recordInfoSection}
     ${editBtn}
+    ${deleteBtn}
 
     <div class="detail-card">
       <div class="detail-row">
